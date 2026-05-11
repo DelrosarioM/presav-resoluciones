@@ -343,6 +343,7 @@ export default function Home() {
               {paso === 1 && <Paso1Formulario formulario={formulario} setFormulario={setFormulario} errores={errores} manejarCambio={manejarCambio} validarYContinuar={validarYContinuar} />}
               {paso === 2 && <Paso2Considerandos busqueda={busqueda} setBusqueda={setBusqueda} cargandoConsiderandos={cargandoConsiderandos} considerandosBD={considerandosBD} considerandosSeleccionados={considerandosSeleccionados} toggleConsiderando={toggleConsiderando} quitarConsiderando={quitarConsiderando} actualizarTextoConsiderando={actualizarTextoConsiderando} setPaso={setPaso} formulario={formulario} setTextoResolucion={setTextoResolucion} />}
               {paso === 3 && <Paso3VistaPrevia setPaso={setPaso} veredicto={veredicto} setVeredicto={setVeredicto} textoResolucion={textoResolucion} setTextoResolucion={setTextoResolucion} formulario={formulario} considerandosSeleccionados={considerandosSeleccionados} />}
+              // probando despliegue automatico
             </>
           )}
         </div>
