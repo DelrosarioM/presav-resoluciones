@@ -3,6 +3,11 @@ import React from "react";
 import { IconCheck, IconX, IconArrowLeft, IconPrinter } from "@tabler/icons-react";
 
 export default function Paso3VistaPrevia({ setPaso, veredicto, setVeredicto, textoResolucion, setTextoResolucion, formulario, considerandosSeleccionados }: any) {
+    const formatearFecha = (fechaISO: string) => {
+        if (!fechaISO) return "[FECHA]";
+        const [año, mes, dia] = fechaISO.split('-');
+        return `${dia}/${mes}/${año}`;
+    };
 
     // Mudamos la función de PDF aquí porque solo se usa en el Paso 3
     const generarPDF = async () => {
@@ -67,7 +72,7 @@ export default function Paso3VistaPrevia({ setPaso, veredicto, setVeredicto, tex
                             value={textoResolucion}
                             onChange={(e) => setTextoResolucion(e.target.value)}
                             className="w-full p-4 text-gray-900 font-medium text-sm outline-none resize-y"
-                            placeholder="la solicitud de REINGRESO EN FORMA EXCEPCIONAL..."
+                            placeholder="Redacte la resolución final aquí..."
                         />
                     </div>
                 </div>
@@ -81,16 +86,16 @@ export default function Paso3VistaPrevia({ setPaso, veredicto, setVeredicto, tex
                             <EncabezadoDocumento />
                             <div className="text-center font-bold mb-6 text-[15px]" style={{ color: '#000000' }}>
                                 <p>COMISIÓN ASESORA DEL PROGRAMA ESTUDIOS AVANZADOS</p>
-                                <p>RESOLUCIÓN {formulario.tipoResolucion} CAPRESA Nº{formulario.ano}/{formulario.correlativo || "[NUMERO]"}</p>
+                                <p>RESOLUCIÓN {formulario.tipoResolucion} CAPRESAV Nº{formulario.ano}/{formulario.correlativo || "[NUMERO]"}</p>
                             </div>
                             <div className="mb-4 text-justify" style={{ color: '#000000' }}>
                                 <p><span className="font-bold">UNIDAD EJECUTORA:</span> SUBPROGRAMA CIENCIAS DE LA EDUCACIÓN Y HUMANIDADES</p>
                             </div>
                             <div className="mb-4 text-justify" style={{ color: '#000000' }}>
-                                <p><span className="font-bold">PLANTEAMIENTO:</span> Solicitud de REINGRESO EN FORMA EXCEPCIONAL, a fin de proseguir estudios en el Programa de Estudios Avanzados en la {formulario.programa || "[MAESTRÍA]"}, para el período académico [PERIODO_ACADEMICO], sede San Carlos, por parte de la ciudadana: {formulario.nombre.toUpperCase() || "[NOMBRE]"}, titular de la cédula de identidad Nº {formulario.nacionalidad}-{formulario.cedula || "[CEDULA]"}. La solicitud la realiza la Dra. Carmen R. Pinto V., Jefa del Programa de Estudios Avanzados Cojedes.</p>
+                                <p><span className="font-bold">PLANTEAMIENTO:</span> {formulario.planteamiento || "[PLANTEAMIENTO DEL CASO]"}</p>
                             </div>
                             <div className="mb-6 font-bold flex justify-center gap-8" style={{ color: '#000000' }}>
-                                <p>FECHA: {new Date().toLocaleDateString('es-VE')}</p>
+                                <p>FECHA: {formatearFecha(formulario.fechaComision)}</p>
                                 <p>ACTA Nº: {formulario.acta || "[ACTA]"} {formulario.tipoResolucion}</p>
                                 <p>PUNTO: {formulario.punto || "[PUNTO]"}</p>
                             </div>

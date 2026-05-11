@@ -48,10 +48,12 @@ export default function Home() {
     correlativo: "",
     acta: "",
     punto: "",
+    fechaComision: "",
     nacionalidad: "V",
     cedula: "",
     nombre: "",
-    programa: ""
+    programa: "",
+    planteamiento: ""
   });
 
   useEffect(() => {
@@ -110,8 +112,11 @@ export default function Home() {
     if (!formulario.nombre.trim()) nuevosErrores.nombre = "Requerido";
     else if (formulario.nombre.trim().length < 5) nuevosErrores.nombre = "Ingrese el nombre completo";
     if (!formulario.programa) nuevosErrores.programa = "Seleccione un programa";
+    if (!formulario.fechaComision) nuevosErrores.fechaComision = "Requerido";
+    if (!formulario.planteamiento.trim()) nuevosErrores.planteamiento = "Requerido";
 
     if (Object.keys(nuevosErrores).length > 0) { setErrores(nuevosErrores); return; }
+    localStorage.setItem('presav_historial_form', JSON.stringify(formulario));
     setPaso(2);
   };
 
@@ -174,7 +179,19 @@ export default function Home() {
   const limpiarFormulario = () => {
     if (window.confirm("¿Estás seguro de que deseas reiniciar la resolución? Se perderán los datos ingresados.")) {
       setPaso(1);
-      setFormulario({ tipoResolucion: "ORDINARIA", ano: new Date().getFullYear().toString(), correlativo: "", acta: "", punto: "", nacionalidad: "V", cedula: "", nombre: "", programa: "" });
+      setFormulario({
+        tipoResolucion: "ORDINARIA",
+        ano: new Date().getFullYear().toString(),
+        correlativo: "",
+        acta: "",
+        punto: "",
+        fechaComision: "",
+        nacionalidad: "V",
+        cedula: "",
+        nombre: "",
+        programa: "",
+        planteamiento: ""
+      });
       setConsiderandosSeleccionados([]);
       setVeredicto("");
       setTextoResolucion("");
@@ -323,7 +340,7 @@ export default function Home() {
                 )}
               </header>
 
-              {paso === 1 && <Paso1Formulario formulario={formulario} errores={errores} manejarCambio={manejarCambio} validarYContinuar={validarYContinuar} />}
+              {paso === 1 && <Paso1Formulario formulario={formulario} setFormulario={setFormulario} errores={errores} manejarCambio={manejarCambio} validarYContinuar={validarYContinuar} />}
               {paso === 2 && <Paso2Considerandos busqueda={busqueda} setBusqueda={setBusqueda} cargandoConsiderandos={cargandoConsiderandos} considerandosBD={considerandosBD} considerandosSeleccionados={considerandosSeleccionados} toggleConsiderando={toggleConsiderando} quitarConsiderando={quitarConsiderando} actualizarTextoConsiderando={actualizarTextoConsiderando} setPaso={setPaso} formulario={formulario} setTextoResolucion={setTextoResolucion} />}
               {paso === 3 && <Paso3VistaPrevia setPaso={setPaso} veredicto={veredicto} setVeredicto={setVeredicto} textoResolucion={textoResolucion} setTextoResolucion={setTextoResolucion} formulario={formulario} considerandosSeleccionados={considerandosSeleccionados} />}
             </>

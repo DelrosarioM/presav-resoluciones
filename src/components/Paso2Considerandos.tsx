@@ -103,7 +103,7 @@ export default function Paso2Considerandos({ busqueda, setBusqueda, cargandoCons
                     <button onClick={() => setPaso(1)} className="text-blue-600 font-semibold hover:text-blue-800 transition-colors flex items-center gap-2">
                         <IconArrowLeft size={20} /> Volver al Paso 1
                     </button>
-                    <button disabled={considerandosSeleccionados.length === 0} onClick={() => { setTextoResolucion(`la solicitud de REINGRESO EN FORMA EXCEPCIONAL, a fin de proseguir estudios en el Programa de Estudios Avanzados en la ${formulario.programa}, para el período académico [PERIODO_ACADEMICO], sede San Carlos, por parte de la ciudadana: ${formulario.nombre.toUpperCase()}, titular de la cédula de identidad Nº ${formulario.nacionalidad}-${formulario.cedula}. La solicitud la realiza la Dra. Carmen R. Pinto V., Jefa del Programa de Estudios Avanzados-Cojedes.`); setPaso(3); }} className={`font-bold py-3 px-8 rounded-xl text-white text-base transition-all shadow-sm flex items-center gap-2 ${considerandosSeleccionados.length > 0 ? 'bg-orange-500 hover:bg-orange-600' : 'bg-gray-300 cursor-not-allowed opacity-70'}`}>
+                    <button disabled={considerandosSeleccionados.length === 0} onClick={() => { setTextoResolucion(""); setPaso(3); }} className={`font-bold py-3 px-8 rounded-xl text-white text-base transition-all shadow-sm flex items-center gap-2 ${considerandosSeleccionados.length > 0 ? 'bg-orange-500 hover:bg-orange-600' : 'bg-gray-300 cursor-not-allowed opacity-70'}`}>
                         Paso 3: Vista Previa <IconArrowRight size={20} />
                     </button>
                 </div>
