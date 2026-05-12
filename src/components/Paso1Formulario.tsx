@@ -128,7 +128,7 @@ export default function Paso1Formulario({ formulario, setFormulario, errores, ma
                             {errores.nombre && <span className="text-red-500 text-sm font-bold">{errores.nombre}</span>}
                             {historial?.nombre && (
                                 <button type="button" onClick={() => setFormulario({ ...formulario, nombre: historial.nombre })} className="text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors w-max text-left">
-                                    <IconHistory size={12} /> Último: <span className="font-semibold text-gray-600 truncate max-w-[200px]">{historial.nombre}</span>
+                                    <IconHistory size={12} /> Último: <span className="font-semibold text-gray-600 truncate max-w-50">{historial.nombre}</span>
                                 </button>
                             )}
                         </div>

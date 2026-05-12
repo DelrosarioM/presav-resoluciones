@@ -11,8 +11,8 @@ import {
   IconSettings,
   IconLogout,
   IconRefresh,
-  IconChevronLeft,    // <-- NUEVO: Para colapsar
-  IconChevronRight    // <-- NUEVO: Para expandir
+  IconChevronLeft,
+  IconChevronRight
 } from '@tabler/icons-react';
 
 import Paso1Formulario from "../components/Paso1Formulario";
@@ -30,7 +30,6 @@ export default function Home() {
 
   const [vistaActiva, setVistaActiva] = useState<"resoluciones" | "usuarios" | "mis-resoluciones" | "perfil">("resoluciones");
 
-  // NUEVO ESTADO: Controla si el panel lateral está expandido o colapsado
   const [sidebarExpandida, setSidebarExpandida] = useState(true);
 
   const [paso, setPaso] = useState(1);
@@ -116,7 +115,10 @@ export default function Home() {
     if (!formulario.planteamiento.trim()) nuevosErrores.planteamiento = "Requerido";
 
     if (Object.keys(nuevosErrores).length > 0) { setErrores(nuevosErrores); return; }
+
+    // Guardar en el historial del navegador antes de avanzar
     localStorage.setItem('presav_historial_form', JSON.stringify(formulario));
+
     setPaso(2);
   };
 
@@ -257,26 +259,24 @@ export default function Home() {
             </button>
           )}
 
-          {(rolUsuario === "profesor" || rolUsuario === "estudiante") && (
-            <>
-              <button
-                onClick={() => setVistaActiva("mis-resoluciones")}
-                title="Mis Trámites"
-                className={`p-3 rounded-xl transition-all font-medium flex items-center gap-3 ${vistaActiva === "mis-resoluciones" ? 'bg-orange-500 shadow-md' : 'hover:bg-blue-800 text-blue-100'} ${!sidebarExpandida && 'justify-center'}`}
-              >
-                {rolUsuario === "estudiante" ? <IconSchool size={20} className="shrink-0" /> : <IconBooks size={20} className="shrink-0" />}
-                {sidebarExpandida && <span className="truncate">Mis Trámites</span>}
-              </button>
-              <button
-                onClick={() => setVistaActiva("perfil")}
-                title="Mi Perfil"
-                className={`p-3 rounded-xl transition-all font-medium flex items-center gap-3 ${vistaActiva === "perfil" ? 'bg-orange-500 shadow-md' : 'hover:bg-blue-800 text-blue-100'} ${!sidebarExpandida && 'justify-center'}`}
-              >
-                <IconSettings size={20} className="shrink-0" />
-                {sidebarExpandida && <span className="truncate">Mi Perfil</span>}
-              </button>
-            </>
-          )}
+          {/* ESTOS DOS BOTONES AHORA SON PARA TODOS LOS ROLES */}
+          <button
+            onClick={() => setVistaActiva("mis-resoluciones")}
+            title="Mis Trámites"
+            className={`p-3 rounded-xl transition-all font-medium flex items-center gap-3 ${vistaActiva === "mis-resoluciones" ? 'bg-orange-500 shadow-md' : 'hover:bg-blue-800 text-blue-100'} ${!sidebarExpandida && 'justify-center'}`}
+          >
+            {rolUsuario === "estudiante" ? <IconSchool size={20} className="shrink-0" /> : <IconBooks size={20} className="shrink-0" />}
+            {sidebarExpandida && <span className="truncate">Mis Trámites</span>}
+          </button>
+
+          <button
+            onClick={() => setVistaActiva("perfil")}
+            title="Mi Perfil"
+            className={`p-3 rounded-xl transition-all font-medium flex items-center gap-3 ${vistaActiva === "perfil" ? 'bg-orange-500 shadow-md' : 'hover:bg-blue-800 text-blue-100'} ${!sidebarExpandida && 'justify-center'}`}
+          >
+            <IconSettings size={20} className="shrink-0" />
+            {sidebarExpandida && <span className="truncate">Mi Perfil</span>}
+          </button>
         </nav>
 
         <div className={`p-4 border-t border-blue-800 transition-all ${!sidebarExpandida && 'flex justify-center'}`}>
@@ -303,6 +303,7 @@ export default function Home() {
 
           {vistaActiva === "usuarios" && rolUsuario === "administrador" && <GestionUsuarios />}
 
+          {/* MIS TRAMITES AHORA NO ESTÁ RESTRINGIDO */}
           {vistaActiva === "mis-resoluciones" && (
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center mt-10 max-w-3xl mx-auto">
               <h2 className="text-2xl font-bold text-blue-900 mb-2">
@@ -316,7 +317,8 @@ export default function Home() {
             </div>
           )}
 
-          {vistaActiva === "perfil" && (rolUsuario === "profesor" || rolUsuario === "estudiante") && <MiPerfil />}
+          {/* EL PERFIL AHORA TAMPOCO ESTÁ RESTRINGIDO */}
+          {vistaActiva === "perfil" && <MiPerfil />}
 
           {vistaActiva === "resoluciones" && (rolUsuario === "administrador" || rolUsuario === "profesor") && (
             <>
@@ -343,7 +345,6 @@ export default function Home() {
               {paso === 1 && <Paso1Formulario formulario={formulario} setFormulario={setFormulario} errores={errores} manejarCambio={manejarCambio} validarYContinuar={validarYContinuar} />}
               {paso === 2 && <Paso2Considerandos busqueda={busqueda} setBusqueda={setBusqueda} cargandoConsiderandos={cargandoConsiderandos} considerandosBD={considerandosBD} considerandosSeleccionados={considerandosSeleccionados} toggleConsiderando={toggleConsiderando} quitarConsiderando={quitarConsiderando} actualizarTextoConsiderando={actualizarTextoConsiderando} setPaso={setPaso} formulario={formulario} setTextoResolucion={setTextoResolucion} />}
               {paso === 3 && <Paso3VistaPrevia setPaso={setPaso} veredicto={veredicto} setVeredicto={setVeredicto} textoResolucion={textoResolucion} setTextoResolucion={setTextoResolucion} formulario={formulario} considerandosSeleccionados={considerandosSeleccionados} />}
-              // probando despliegue automatico
             </>
           )}
         </div>
