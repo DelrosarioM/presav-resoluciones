@@ -2,7 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { IconFileDescription, IconUser, IconArrowRight, IconHistory } from "@tabler/icons-react";
 
-export default function Paso1Formulario({ formulario, setFormulario, errores, manejarCambio, validarYContinuar }: any) {
+import { useResoluciones } from "../context/ResolucionesContext";
+
+export default function Paso1Formulario() {
+    const { formulario, setFormulario, errores, manejarCambio, validarYContinuar } = useResoluciones();
     // Estado para guardar la información de la última resolución creada
     const [historial, setHistorial] = useState<any>(null);
 

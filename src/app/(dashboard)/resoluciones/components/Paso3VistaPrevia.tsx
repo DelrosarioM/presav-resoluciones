@@ -1,8 +1,11 @@
 // src/components/Paso3VistaPrevia.tsx
 import React from "react";
-import { IconCheck, IconX, IconArrowLeft, IconPrinter } from "@tabler/icons-react";
+import { IconCheck, IconX, IconArrowLeft, IconPrinter, IconBrandFacebook, IconBrandTwitter, IconBrandInstagram } from "@tabler/icons-react";
 
-export default function Paso3VistaPrevia({ setPaso, veredicto, setVeredicto, textoResolucion, setTextoResolucion, formulario, considerandosSeleccionados }: any) {
+import { useResoluciones } from "../context/ResolucionesContext";
+
+export default function Paso3VistaPrevia() {
+    const { setPaso, veredicto, setVeredicto, textoResolucion, setTextoResolucion, formulario, considerandosSeleccionados } = useResoluciones();
     const formatearFecha = (fechaISO: string) => {
         if (!fechaISO) return "[FECHA]";
         const [año, mes, dia] = fechaISO.split('-');
@@ -31,6 +34,21 @@ export default function Paso3VistaPrevia({ setPaso, veredicto, setVeredicto, tex
                 <p>UNIVERSIDAD NACIONAL EXPERIMENTAL</p><p>DE LOS LLANOS OCCIDENTALES</p><p>"EZEQUIEL ZAMORA"</p><p>UNELLEZ VIPI COJEDES</p>
             </div>
             <div className="shrink-0 w-48 flex justify-end"><img src="/logo-presav.png" alt="Logo PRESAV" className="h-24 w-auto object-contain" /></div>
+        </div>
+    );
+
+    const PieDePaginaDocumento = () => (
+        <div className="mt-auto pt-6 text-center text-[11px] leading-tight w-full" style={{ color: '#000000' }}>
+            <p className="font-bold text-[13px] mb-2" style={{ color: '#d92718' }}>
+                La ciencia y la tecnología al servicio de la liberación permanente de la humanización del hombre"
+            </p>
+            <p>Dirección: Urb. Cantaclaro final avenida Principal, San Carlos Edo. Cojedes</p>
+            <p>Teléfono: (0258) 4331718. / Correo electrónico: <span className="text-blue-600 underline">estudiosavanzadoscojedes@gmail.com</span></p>
+            <div className="flex justify-center gap-8 mt-3 font-bold text-black text-[12px]">
+                <span className="flex items-center gap-1.5"><div className="bg-blue-400 text-white rounded p-0.5"><IconBrandFacebook size={14} /></div> Presav.vipi</span>
+                <span className="flex items-center gap-1.5"><div className="bg-blue-400 text-white rounded p-0.5"><IconBrandTwitter size={14} /></div> Presav_vipi</span>
+                <span className="flex items-center gap-1.5"><div className="bg-blue-400 text-white rounded p-0.5"><IconBrandInstagram size={14} /></div> Presav_vipi</span>
+            </div>
         </div>
     );
 
@@ -88,10 +106,10 @@ export default function Paso3VistaPrevia({ setPaso, veredicto, setVeredicto, tex
                                 <p>COMISIÓN ASESORA DEL PROGRAMA ESTUDIOS AVANZADOS</p>
                                 <p>RESOLUCIÓN {formulario.tipoResolucion} CAPRESAV Nº{formulario.ano}/{formulario.correlativo || "[NUMERO]"}</p>
                             </div>
-                            <div className="mb-4 text-justify" style={{ color: '#000000' }}>
+                            <div className="mb-4 text-justify" style={{ color: '#000000', lineHeight: '1.5' }}>
                                 <p><span className="font-bold">UNIDAD EJECUTORA:</span> SUBPROGRAMA CIENCIAS DE LA EDUCACIÓN Y HUMANIDADES</p>
                             </div>
-                            <div className="mb-4 text-justify" style={{ color: '#000000' }}>
+                            <div className="mb-4 text-justify" style={{ color: '#000000', lineHeight: '1.5' }}>
                                 <p><span className="font-bold">PLANTEAMIENTO:</span> {formulario.planteamiento || "[PLANTEAMIENTO DEL CASO]"}</p>
                             </div>
                             <div className="mb-6 font-bold flex justify-center gap-8" style={{ color: '#000000' }}>
@@ -105,10 +123,11 @@ export default function Paso3VistaPrevia({ setPaso, veredicto, setVeredicto, tex
                             {considerandosSeleccionados.map((item: any, index: number) => (
                                 <div key={index} className="mb-4 text-justify" style={{ color: '#000000' }}>
                                     <p className="font-bold text-center mb-1">CONSIDERANDO</p>
-                                    <p>{item.texto}</p>
+                                    <p dangerouslySetInnerHTML={{ __html: item.texto.replace(/\n/g, '<br/>') }} style={{ lineHeight: '1.5' }}></p>
                                 </div>
                             ))}
                         </div>
+                        <PieDePaginaDocumento />
                     </div>
 
                     {/* HOJA 2 */}
@@ -118,15 +137,15 @@ export default function Paso3VistaPrevia({ setPaso, veredicto, setVeredicto, tex
                             <div className="text-center font-bold mb-8" style={{ color: '#000000' }}>
                                 <p>LA COMISIÓN ASESORA RESUELVE:</p>
                             </div>
-                            <div className="text-justify mb-8" style={{ color: '#000000' }}>
+                            <div className="text-justify mb-8" style={{ color: '#000000', lineHeight: '1.5' }}>
                                 <p><span className="font-bold">ÚNICO: {veredicto ? (veredicto === "Aprobado" ? "APROBAR" : "NEGAR") : "[VEREDICTO]"}</span> {textoResolucion || "[Redacción de la resolución final irá aquí...]"}</p>
                             </div>
-                            <div className="text-justify" style={{ color: '#000000' }}>
+                            <div className="text-justify" style={{ color: '#000000', lineHeight: '1.5' }}>
                                 <p>Notifíquese a la parte interesada. La documentación digitalizada se archiva. Cúmplase.</p>
                                 <p className="mt-4">Firmado y sellado en la sede del Programa de Estudios Avanzados (PRESAV), del Vicerrectorado de Infraestructura y Procesos Industriales (VIPI), de la UNELLEZ, ubicado en la ciudad de San Carlos, capital del estado Cojedes, a los {new Date().getDate()} días del mes de {new Date().toLocaleString('es-VE', { month: 'long' })} del {new Date().getFullYear()}.</p>
                             </div>
                         </div>
-                        <div className="mt-auto">
+                        <div className="mt-8 mb-auto">
                             <div className="flex justify-between mb-12 text-center font-bold" style={{ color: '#000000' }}>
                                 <div className="w-1/2">
                                     <div className="border-t w-3/4 mx-auto pt-2" style={{ borderColor: '#000000' }}>
@@ -140,6 +159,7 @@ export default function Paso3VistaPrevia({ setPaso, veredicto, setVeredicto, tex
                                 </div>
                             </div>
                         </div>
+                        <PieDePaginaDocumento />
                     </div>
                 </div>
             </div>

@@ -16,7 +16,10 @@ import {
     IconLockOpen
 } from "@tabler/icons-react";
 
-export default function Paso2Considerandos({ busqueda, setBusqueda, cargandoConsiderandos, considerandosBD, considerandosSeleccionados, toggleConsiderando, quitarConsiderando, actualizarTextoConsiderando, setPaso, formulario, setTextoResolucion }: any) {
+import { useResoluciones } from "../context/ResolucionesContext";
+
+export default function Paso2Considerandos() {
+    const { busqueda, setBusqueda, cargandoConsiderandos, considerandosBD, considerandosSeleccionados, toggleConsiderando, quitarConsiderando, actualizarTextoConsiderando, setPaso, setTextoResolucion } = useResoluciones();
 
     // ESTADOS INTELIGENTES:
     // 1. Guardamos los valores que el usuario escribe en las cajitas de las variables
@@ -37,8 +40,8 @@ export default function Paso2Considerandos({ busqueda, setBusqueda, cargandoCons
         let textoFinal = plantilla;
         todasLasVariables.forEach(v => {
             const valorIngresado = nuevosValores[v];
-            // Si el usuario escribió algo, lo reemplazamos. Si no, dejamos el corchete original [VARIABLE]
-            textoFinal = textoFinal.split(v).join(valorIngresado ? valorIngresado : v);
+            // Si el usuario escribió algo, lo reemplazamos envuelto en <b>. Si no, dejamos el corchete original [VARIABLE]
+            textoFinal = textoFinal.split(v).join(valorIngresado ? `<b>${valorIngresado}</b>` : v);
         });
 
         // Enviamos el texto armado al estado general de la aplicación
@@ -167,12 +170,18 @@ export default function Paso2Considerandos({ busqueda, setBusqueda, cargandoCons
 
                                     {/* ÁREA DE TEXTO LEGAL */}
                                     <div className="relative">
-                                        <textarea
-                                            value={item.texto}
-                                            onChange={(e) => actualizarTextoConsiderando(item.id, e.target.value)}
-                                            readOnly={estaBloqueado}
-                                            className={`w-full text-sm font-medium text-justify leading-relaxed p-3 rounded-lg outline-none min-h-35 resize-y transition-colors ${estaBloqueado ? 'border border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed' : 'border border-yellow-300 bg-yellow-50 text-gray-900 focus:ring-2 focus:ring-blue-500'}`}
-                                        />
+                                        {estaBloqueado ? (
+                                            <div
+                                                className="w-full text-sm font-medium text-justify leading-relaxed p-3 rounded-lg outline-none min-h-35 transition-colors border border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed overflow-y-auto"
+                                                dangerouslySetInnerHTML={{ __html: item.texto.replace(/\n/g, '<br/>') }}
+                                            />
+                                        ) : (
+                                            <textarea
+                                                value={item.texto.replace(/<\/?b>/g, '')}
+                                                onChange={(e) => actualizarTextoConsiderando(item.id, e.target.value)}
+                                                className="w-full text-sm font-medium text-justify leading-relaxed p-3 rounded-lg outline-none min-h-35 resize-y transition-colors border border-yellow-300 bg-yellow-50 text-gray-900 focus:ring-2 focus:ring-blue-500"
+                                            />
+                                        )}
                                         <span className={`absolute bottom-2 right-2 text-[10px] font-bold px-2 py-1 rounded shadow-sm pointer-events-none flex items-center gap-1 ${estaBloqueado ? 'bg-gray-200 text-gray-500' : 'bg-white text-yellow-600 opacity-80'}`}>
                                             {estaBloqueado ? <><IconLock size={12} /> Autogenerado</> : <><IconPencil size={12} /> Libre</>}
                                         </span>

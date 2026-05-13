@@ -1,18 +1,17 @@
-// src/components/Login.tsx
-import React, { useState } from "react";
-import { supabase } from "../lib/supabase";
-import { IconId, IconLock, IconLogin, IconAlertCircle } from "@tabler/icons-react"; // <-- Importamos los iconos
+"use client";
 
-export default function Login({
-    onLoginExitoso,
-}: {
-    onLoginExitoso: (rol: string, nombreCompleto: string) => void;
-}) {
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { IconId, IconLock, IconLogin, IconAlertCircle } from "@tabler/icons-react";
+
+export default function LoginPage() {
     const [nacionalidad, setNacionalidad] = useState("V");
     const [cedula, setCedula] = useState("");
     const [password, setPassword] = useState("");
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState("");
+    const router = useRouter();
 
     const manejarLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,12 +24,10 @@ export default function Login({
             return;
         }
 
-        // TRUCO DE SEGURIDAD: Convertimos la cédula en un correo interno para que Supabase lo acepte
         const correoInterno = `${nacionalidad.toLowerCase()}-${cedula}@presav.unellez.edu.ve`;
         const cedulaFormateada = `${nacionalidad}-${cedula}`;
 
         try {
-            // 1. Autenticamos con Supabase Auth (Sistema ultra seguro)
             const { data: authData, error: authError } =
                 await supabase.auth.signInWithPassword({
                     email: correoInterno,
@@ -43,7 +40,6 @@ export default function Login({
                 );
             }
 
-            // 2. Si la contraseña es correcta, buscamos qué rol tiene este usuario en nuestra base de datos
             const { data: usuarioData, error: dbError } = await supabase
                 .from("Usuario")
                 .select("rol, primer_nombre, primer_apellido")
@@ -56,9 +52,12 @@ export default function Login({
                 );
             }
 
-            // 3. ¡Éxito! Armamos el nombre y le decimos a la app que lo deje pasar
-            const nombreCompleto = `${usuarioData.primer_nombre} ${usuarioData.primer_apellido}`;
-            onLoginExitoso(usuarioData.rol, nombreCompleto);
+            // Redirect based on role
+            if (usuarioData.rol === "estudiante") {
+                router.push("/mis-tramites");
+            } else {
+                router.push("/resoluciones");
+            }
         } catch (err: any) {
             setError(
                 err.message ||
