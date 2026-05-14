@@ -50,13 +50,18 @@ export default function Paso1Formulario() {
 
                         <div className="flex flex-col gap-2">
                             <label className="font-medium text-gray-700">Identificador de Resolución *</label>
-                            <div className={`flex items-center rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 bg-white ${errores.correlativo ? 'border-red-500' : 'border-gray-300'}`}>
+                            <div className={`flex items-center rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 bg-white ${(errores.correlativo || errores.ano) ? 'border-red-500' : 'border-gray-300'}`}>
                                 <span className="bg-gray-100 p-4 text-gray-600 font-bold border-r border-gray-300">CAPRESAV Nº</span>
-                                <input type="text" name="ano" value={formulario.ano} onChange={manejarCambio} className="w-20 p-4 text-center focus:outline-none text-lg bg-gray-50 text-gray-900 font-bold" maxLength={4} readOnly title="El año se genera automáticamente" />
+                                <input type="text" name="ano" value={formulario.ano} onChange={manejarCambio} className="w-20 p-4 text-center focus:outline-none text-lg bg-gray-50 text-gray-900 font-bold hover:bg-gray-100 transition-colors" maxLength={4} placeholder="YYYY" />
                                 <span className="text-gray-400 text-xl font-light">/</span>
                                 <input type="text" name="correlativo" value={formulario.correlativo} onChange={manejarCambio} placeholder="0231" className="flex-1 p-4 focus:outline-none text-lg text-gray-900 font-medium placeholder-gray-400" maxLength={4} />
                             </div>
-                            {errores.correlativo && <span className="text-red-500 text-sm font-bold">{errores.correlativo}</span>}
+                            {(errores.correlativo || errores.ano) && <span className="text-red-500 text-sm font-bold">{errores.ano ? errores.ano : errores.correlativo}</span>}
+                            {historial?.correlativo && (
+                                <button type="button" onClick={() => setFormulario({ ...formulario, correlativo: historial.correlativo, ano: historial.ano || new Date().getFullYear().toString() })} className="text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
+                                    <IconHistory size={12} /> Última: <span className="font-semibold text-gray-600">{historial.ano || new Date().getFullYear()}/{historial.correlativo}</span>
+                                </button>
+                            )}
                         </div>
 
                         <div className="flex flex-col gap-2">

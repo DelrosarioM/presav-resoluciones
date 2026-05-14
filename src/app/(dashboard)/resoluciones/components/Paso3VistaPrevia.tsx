@@ -1,6 +1,9 @@
 // src/components/Paso3VistaPrevia.tsx
 import React from "react";
-import { IconCheck, IconX, IconArrowLeft, IconPrinter, IconBrandFacebook, IconBrandTwitter, IconBrandInstagram } from "@tabler/icons-react";
+import { IconCheck, IconX, IconArrowLeft, IconFileWord, IconBrandFacebook, IconBrandTwitter, IconBrandInstagram } from "@tabler/icons-react";
+import PizZip from "pizzip";
+import Docxtemplater from "docxtemplater";
+import { saveAs } from "file-saver";
 
 import { useResoluciones } from "../context/ResolucionesContext";
 
@@ -12,19 +15,54 @@ export default function Paso3VistaPrevia() {
         return `${dia}/${mes}/${año}`;
     };
 
-    // Mudamos la función de PDF aquí porque solo se usa en el Paso 3
-    const generarPDF = async () => {
-        const html2pdf = (await import('html2pdf.js')).default;
-        const elemento = document.getElementById('documento-pdf') as HTMLElement;
-        const opciones: any = {
-            margin: 0,
-            filename: `Resolucion_PRESAV_${formulario.correlativo}_${formulario.cedula}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: 'css', before: '.salto-pagina' }
-        };
-        html2pdf().set(opciones).from(elemento).save();
+    // Función para generar el documento en Word (docx)
+    const generarWord = async () => {
+        try {
+            // 1. Cargar la plantilla base desde la carpeta public
+            const response = await fetch('/plantilla_resolucion.docx');
+            if (!response.ok) throw new Error("No se pudo cargar la plantilla base.");
+            const arrayBuffer = await response.arrayBuffer();
+
+            // 2. Inicializar PizZip y docxtemplater
+            const zip = new PizZip(arrayBuffer);
+            const doc = new Docxtemplater(zip, {
+                paragraphLoop: true,
+                linebreaks: true,
+            });
+
+            // 3. Formatear considerandos (eliminar etiquetas HTML como <b> y <br/>)
+            const considerandosFormateados = considerandosSeleccionados.map((item: any) => ({
+                texto: item.texto.replace(/<[^>]*>?/gm, '') // Limpia las negritas HTML para el Word
+            }));
+
+            // 4. Inyectar datos en las etiquetas de la plantilla
+            doc.render({
+                tipo_resolucion: formulario.tipoResolucion === "EXTRAORDINARIA" ? "EXTRAORDINARIA" : "ORDINARIA",
+                anio: formulario.ano || new Date().getFullYear(),
+                correlativo: formulario.correlativo || "[NUMERO]",
+                unidad_ejecutora: "SUBPROGRAMA CIENCIAS DE LA EDUCACIÓN Y HUMANIDADES",
+                planteamiento: formulario.planteamiento || "[PLANTEAMIENTO]",
+                fecha: formatearFecha(formulario.fechaComision),
+                acta: formulario.acta || "[ACTA]",
+                punto: formulario.punto || "[PUNTO]",
+                considerandos: considerandosFormateados,
+                veredicto: veredicto ? (veredicto === "Aprobado" ? "APROBAR" : "NEGAR") : "[VEREDICTO]",
+                texto_resolucion: textoResolucion || "[Redacción de la resolución final]",
+                presidente: "Dr. Reynaldo Mujica",
+                secretaria: "Dra. Carmen Pinto"
+            });
+
+            // 5. Generar el archivo y descargarlo
+            const blob = doc.getZip().generate({
+                type: "blob",
+                mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            });
+            saveAs(blob, `Resolucion_PRESAV_${formulario.correlativo || "Borrador"}_${formulario.cedula}.docx`);
+
+        } catch (error) {
+            console.error("Error al generar el documento Word:", error);
+            alert("Ocurrió un error al generar el archivo Word. Asegúrate de que la plantilla esté configurada correctamente.");
+        }
     };
 
     const EncabezadoDocumento = () => (
@@ -169,10 +207,10 @@ export default function Paso3VistaPrevia() {
                     <IconArrowLeft size={20} /> Volver a Considerandos
                 </button>
                 <button
-                    onClick={generarPDF}
-                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl text-base shadow-sm flex items-center gap-2 transition-transform active:scale-95"
+                    onClick={generarWord}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl text-base shadow-sm flex items-center gap-2 transition-transform active:scale-95"
                 >
-                    <IconPrinter size={20} /> Generar Resolución (PDF)
+                    <IconFileWord size={20} /> Generar Resolución (Word)
                 </button>
             </div>
         </div>

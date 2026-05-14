@@ -93,6 +93,8 @@ export function ResolucionesProvider({ children }: { children: React.ReactNode }
 
   const validarYContinuar = () => {
     let nuevosErrores: Record<string, string> = {};
+    if (!formulario.ano.trim()) nuevosErrores.ano = "Año requerido";
+    else if (!/^\d{4}$/.test(formulario.ano)) nuevosErrores.ano = "Año inválido";
     if (!formulario.correlativo.trim()) nuevosErrores.correlativo = "Requerido";
     else if (!/^\d+$/.test(formulario.correlativo)) nuevosErrores.correlativo = "Solo números";
     if (!formulario.acta.trim()) nuevosErrores.acta = "Requerido";
