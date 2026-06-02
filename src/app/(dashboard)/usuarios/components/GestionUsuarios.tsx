@@ -1,13 +1,17 @@
-// src/components/GestionUsuarios.tsx
+// src/app/(dashboard)/usuarios/components/GestionUsuarios.tsx
 import React, { useState, useEffect } from "react";
-import { supabase } from "../../../../lib/supabase";
-import { IconUserPlus, IconTrash, IconShieldLock, IconX } from "@tabler/icons-react"; // <-- IMPORTAMOS LOS ICONOS
+import { supabase } from "@/lib/supabase";
+import { IconUserPlus, IconTrash, IconShieldLock, IconX, IconSearch, IconId } from "@tabler/icons-react"; // <-- IMPORTAMOS IconSearch e IconId
 
 export default function GestionUsuarios() {
     const [usuarios, setUsuarios] = useState<any[]>([]);
     const [cargando, setCargando] = useState(true);
 
     const [filtroActivo, setFiltroActivo] = useState<"todos" | "administrador" | "profesor" | "estudiante">("todos");
+
+    // NUEVOS ESTADOS DE BÚSQUEDA
+    const [busquedaNombre, setBusquedaNombre] = useState("");
+    const [busquedaCedula, setBusquedaCedula] = useState("");
 
     const [mostrarModalCrear, setMostrarModalCrear] = useState(false);
     const [mostrarModalEditar, setMostrarModalEditar] = useState(false);
@@ -73,7 +77,20 @@ export default function GestionUsuarios() {
         alert(`✅ Éxito: ${data.message}`);
     };
 
-    const usuariosFiltrados = usuarios.filter(user => filtroActivo === "todos" || user.rol === filtroActivo);
+    // LÓGICA DE FILTRADO COMBINADA (Rol + Nombre + Cédula)
+    const usuariosFiltrados = usuarios.filter(user => {
+        // 1. Filtro por Rol
+        const pasaFiltroRol = filtroActivo === "todos" || user.rol === filtroActivo;
+
+        // 2. Filtro por Nombre
+        const nombreCompleto = `${user.primer_nombre} ${user.primer_apellido}`.toLowerCase();
+        const pasaFiltroNombre = nombreCompleto.includes(busquedaNombre.toLowerCase());
+
+        // 3. Filtro por Cédula
+        const pasaFiltroCedula = user.cedula.toLowerCase().includes(busquedaCedula.toLowerCase());
+
+        return pasaFiltroRol && pasaFiltroNombre && pasaFiltroCedula;
+    });
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 relative">
@@ -84,31 +101,43 @@ export default function GestionUsuarios() {
                 </button>
             </div>
 
+            {/* PESTAÑAS DE ROLES */}
             <div className="flex gap-6 mb-6 border-b border-gray-200">
-                <button
-                    onClick={() => setFiltroActivo("todos")}
-                    className={`pb-3 font-semibold transition-all border-b-2 ${filtroActivo === "todos" ? "border-blue-900 text-blue-900" : "border-transparent text-gray-400 hover:text-gray-700"}`}
-                >
-                    Todos
-                </button>
-                <button
-                    onClick={() => setFiltroActivo("administrador")}
-                    className={`pb-3 font-semibold transition-all border-b-2 ${filtroActivo === "administrador" ? "border-red-500 text-red-600" : "border-transparent text-gray-400 hover:text-gray-700"}`}
-                >
-                    Administradores
-                </button>
-                <button
-                    onClick={() => setFiltroActivo("profesor")}
-                    className={`pb-3 font-semibold transition-all border-b-2 ${filtroActivo === "profesor" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-400 hover:text-gray-700"}`}
-                >
-                    Profesores
-                </button>
-                <button
-                    onClick={() => setFiltroActivo("estudiante")}
-                    className={`pb-3 font-semibold transition-all border-b-2 ${filtroActivo === "estudiante" ? "border-green-500 text-green-600" : "border-transparent text-gray-400 hover:text-gray-700"}`}
-                >
-                    Estudiantes
-                </button>
+                <button onClick={() => setFiltroActivo("todos")} className={`pb-3 font-semibold transition-all border-b-2 ${filtroActivo === "todos" ? "border-blue-900 text-blue-900" : "border-transparent text-gray-400 hover:text-gray-700"}`}>Todos</button>
+                <button onClick={() => setFiltroActivo("administrador")} className={`pb-3 font-semibold transition-all border-b-2 ${filtroActivo === "administrador" ? "border-red-500 text-red-600" : "border-transparent text-gray-400 hover:text-gray-700"}`}>Administradores</button>
+                <button onClick={() => setFiltroActivo("profesor")} className={`pb-3 font-semibold transition-all border-b-2 ${filtroActivo === "profesor" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-400 hover:text-gray-700"}`}>Profesores</button>
+                <button onClick={() => setFiltroActivo("estudiante")} className={`pb-3 font-semibold transition-all border-b-2 ${filtroActivo === "estudiante" ? "border-green-500 text-green-600" : "border-transparent text-gray-400 hover:text-gray-700"}`}>Estudiantes</button>
+            </div>
+
+            {/* NUEVOS BUSCADORES DE TEXTO Y CÉDULA */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {/* Buscador de Cédula */}
+                <div className="relative flex items-center rounded-xl border border-gray-300 bg-gray-50 focus-within:ring-2 focus-within:ring-blue-500 overflow-hidden transition-all">
+                    <div className="pl-4 text-gray-400 flex items-center justify-center">
+                        <IconId size={20} />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Buscar por cédula (Ej. 12345678)..."
+                        value={busquedaCedula}
+                        onChange={(e) => setBusquedaCedula(e.target.value)}
+                        className="w-full p-4 pl-3 bg-transparent text-gray-900 font-medium placeholder-gray-400 outline-none"
+                    />
+                </div>
+
+                {/* Buscador de Nombre */}
+                <div className="relative flex items-center rounded-xl border border-gray-300 bg-gray-50 focus-within:ring-2 focus-within:ring-blue-500 overflow-hidden transition-all">
+                    <div className="pl-4 text-gray-400 flex items-center justify-center">
+                        <IconSearch size={20} />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Buscar por nombre o apellido..."
+                        value={busquedaNombre}
+                        onChange={(e) => setBusquedaNombre(e.target.value)}
+                        className="w-full p-4 pl-3 bg-transparent text-gray-900 font-medium placeholder-gray-400 outline-none"
+                    />
+                </div>
             </div>
 
             {cargando ? (
@@ -117,7 +146,7 @@ export default function GestionUsuarios() {
                 <div className="overflow-x-auto">
                     {usuariosFiltrados.length === 0 ? (
                         <div className="text-center p-12 text-gray-400 italic bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                            No hay usuarios registrados en esta categoría.
+                            No hay usuarios que coincidan con los filtros seleccionados.
                         </div>
                     ) : (
                         <table className="w-full text-left border-collapse">
@@ -152,6 +181,7 @@ export default function GestionUsuarios() {
                 </div>
             )}
 
+            {/* EL RESTO DEL CÓDIGO (MODALES) SE MANTIENE EXACTAMENTE IGUAL */}
             {mostrarModalCrear && (
                 <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4 backdrop-blur-sm">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-200 animate-in fade-in zoom-in-95 duration-200">

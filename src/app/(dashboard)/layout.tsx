@@ -12,7 +12,8 @@ import {
   IconSettings,
   IconLogout,
   IconChevronLeft,
-  IconChevronRight
+  IconChevronRight,
+  IconClipboardList
 } from '@tabler/icons-react';
 
 export default function DashboardLayout({
@@ -130,6 +131,18 @@ export default function DashboardLayout({
             >
               <IconUsersGroup size={20} className="shrink-0" />
               {sidebarExpandida && <span className="truncate">Gestión de Usuarios</span>}
+            </Link>
+          )}
+
+          {/* NUEVO BOTÓN: GESTIÓN DE CONSIDERANDOS */}
+          {(rolUsuario === "administrador" || rolUsuario === "profesor") && (
+            <Link
+              href="/gestion-considerandos"
+              title="Gestión de Considerandos"
+              className={`p-3 rounded-xl transition-all font-medium flex items-center gap-3 ${pathname === "/gestion-considerandos" ? 'bg-orange-500 shadow-md' : 'hover:bg-blue-800 text-blue-100'} ${!sidebarExpandida && 'justify-center'}`}
+            >
+              <IconClipboardList size={20} className="shrink-0" />
+              {sidebarExpandida && <span className="truncate">Gestión Considerandos</span>}
             </Link>
           )}
 

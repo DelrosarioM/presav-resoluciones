@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Sistema de Resoluciones | PRESAV UNELLEZ",
+  title: "Sistema de Resoluciones | PRESAV UNELLEZ VIPI",
   description: "Plataforma de generación automatizada de resoluciones para la Comisión Asesora del PRESAV",
 };
 
