@@ -17,12 +17,12 @@ export async function POST(request: Request) {
         const { titulo, texto_plantilla, activo } = body;
 
         // Insertamos los datos en la tabla. 
-        // Agregamos 'categoria: "General"' por defecto para cumplir con tu esquema SQL
+        // Agregamos categoria_id por defecto para cumplir con la nueva llave foránea
         const { error: dbError } = await supabaseAdmin.from('ConsiderandosCatalogo').insert({
             titulo,
             texto_plantilla,
             activo,
-            categoria: 'General'
+            categoria_id: 1,
         });
 
         if (dbError) throw new Error(`Error al guardar en BD: ${dbError.message}`);
