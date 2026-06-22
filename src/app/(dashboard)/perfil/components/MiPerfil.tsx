@@ -1,7 +1,7 @@
 // src/components/MiPerfil.tsx
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../../../lib/supabase";
-import { IconLock, IconCheck, IconAlertCircle } from "@tabler/icons-react"; // <-- IMPORTAMOS LOS ICONOS
+import { IconLock, IconCheck, IconAlertCircle } from "@tabler/icons-react";
 
 export default function MiPerfil() {
     const [perfil, setPerfil] = useState<any>(null);
@@ -18,14 +18,11 @@ export default function MiPerfil() {
     }, []);
 
     const cargarDatosPerfil = async () => {
-        // 1. Obtenemos quién está conectado en la bóveda de Auth
         const { data: { user } } = await supabase.auth.getUser();
 
         if (user?.email) {
-            // 2. Extraemos la cédula del correo (ej: de "v-29626161@..." sacamos "V-29626161")
             const cedulaFormateada = user.email.split('@')[0].toUpperCase();
 
-            // 3. Buscamos sus datos reales en nuestra tabla
             const { data, error } = await supabase
                 .from('Usuario')
                 .select('*')
@@ -41,7 +38,6 @@ export default function MiPerfil() {
         e.preventDefault();
         setMensaje({ tipo: "", texto: "" });
 
-        // Validaciones básicas
         if (nuevaPassword !== confirmarPassword) {
             return setMensaje({ tipo: "error", texto: "Las contraseñas no coinciden." });
         }
@@ -51,13 +47,12 @@ export default function MiPerfil() {
 
         setGuardando(true);
         try {
-            // ¡Reutilizamos nuestra API maestra para actualizar la clave y encriptarla!
             const res = await fetch('/api/usuarios', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     cedula_original: perfil.cedula,
-                    primer_nombre: perfil.primer_nombre, // Se envían igual para no borrarlos
+                    primer_nombre: perfil.primer_nombre,
                     primer_apellido: perfil.primer_apellido,
                     password_nueva: nuevaPassword
                 })
@@ -77,30 +72,34 @@ export default function MiPerfil() {
     };
 
     if (cargando) {
-        return <div className="text-center p-12 text-gray-500 font-medium animate-pulse bg-white rounded-2xl shadow-sm border border-gray-200 mt-10 max-w-3xl mx-auto">Cargando tu información...</div>;
+        return <div className="text-center p-12 text-gray-500 font-medium animate-pulse bg-white rounded-2xl shadow-sm border border-gray-200 mt-4 sm:mt-10 max-w-3xl mx-auto mx-4 sm:mx-auto">Cargando tu información...</div>;
     }
 
     if (!perfil) {
-        return <div className="text-center p-12 text-red-500 bg-white rounded-2xl mt-10 max-w-3xl mx-auto">Error al cargar el perfil.</div>;
+        return <div className="text-center p-12 text-red-500 bg-white rounded-2xl border border-red-200 mt-4 sm:mt-10 max-w-3xl mx-auto mx-4 sm:mx-auto">Error al cargar el perfil.</div>;
     }
 
     return (
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 mt-10 max-w-3xl mx-auto text-left">
-            <div className="border-b border-gray-200 pb-6 mb-6 flex items-center gap-4">
-                <div className="h-16 w-16 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-2xl font-bold shadow-inner">
+        // AJUSTE: Quitamos el mt-10 en móviles para que no quede un hueco blanco gigante arriba
+        <div className="bg-white p-5 sm:p-8 rounded-2xl shadow-sm border border-gray-200 mt-4 sm:mt-10 max-w-3xl mx-auto text-left">
+
+            {/* AJUSTE: flex-col y items-center en móvil para apilar la foto y el texto. En PC vuelve a flex-row */}
+            <div className="border-b border-gray-200 pb-6 mb-6 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4">
+                <div className="h-20 w-20 sm:h-16 sm:w-16 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-3xl sm:text-2xl font-bold shadow-inner shrink-0">
                     {perfil.primer_nombre.charAt(0)}{perfil.primer_apellido.charAt(0)}
                 </div>
                 <div>
                     <h2 className="text-2xl font-bold text-blue-900">{perfil.primer_nombre} {perfil.primer_apellido}</h2>
                     <p className="text-gray-500 font-medium">Cédula: <span className="text-gray-800">{perfil.cedula}</span></p>
-                    <span className="inline-block mt-1 px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold uppercase rounded-full border border-blue-200">
+                    <span className="inline-block mt-2 px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold uppercase rounded-full border border-blue-200">
                         Rol: {perfil.rol}
                     </span>
                 </div>
             </div>
 
-            <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            {/* AJUSTE: p-4 en móvil para que las cajas de texto no queden tan pegadas a los bordes */}
+            <div className="bg-gray-50 p-4 sm:p-6 rounded-xl border border-gray-200">
+                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center justify-center sm:justify-start gap-2">
                     <IconLock className="text-blue-600" size={24} /> Cambiar mi Contraseña
                 </h3>
 
@@ -115,35 +114,35 @@ export default function MiPerfil() {
                     </div>
                 )}
 
-                {/* Agregamos autoComplete="off" por seguridad */}
                 <form onSubmit={cambiarPassword} className="space-y-4" autoComplete="off">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block font-medium text-gray-700 text-sm mb-1">Nueva Contraseña</label>
+                            <label className="block font-medium text-gray-700 text-sm mb-1 text-center sm:text-left">Nueva Contraseña</label>
                             <input
                                 type="password"
                                 value={nuevaPassword}
                                 onChange={(e) => setNuevaPassword(e.target.value)}
-                                className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 text-gray-900 font-medium outline-none bg-white"
+                                className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 text-gray-900 font-medium outline-none bg-white text-center sm:text-left min-w-0"
                                 placeholder="Mínimo 6 caracteres"
                             />
                         </div>
                         <div>
-                            <label className="block font-medium text-gray-700 text-sm mb-1">Confirmar Nueva Contraseña</label>
+                            <label className="block font-medium text-gray-700 text-sm mb-1 text-center sm:text-left">Confirmar Nueva Contraseña</label>
                             <input
                                 type="password"
                                 value={confirmarPassword}
                                 onChange={(e) => setConfirmarPassword(e.target.value)}
-                                className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 text-gray-900 font-medium outline-none bg-white"
+                                className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 text-gray-900 font-medium outline-none bg-white text-center sm:text-left min-w-0"
                                 placeholder="Repite la contraseña"
                             />
                         </div>
                     </div>
-                    <div className="pt-2 flex justify-end">
+                    <div className="pt-4 flex justify-center sm:justify-end">
+                        {/* AJUSTE: w-full en móvil para que el botón sea un bloque completo */}
                         <button
                             type="submit"
                             disabled={guardando || !nuevaPassword || !confirmarPassword}
-                            className={`font-bold py-2.5 px-6 rounded-xl shadow-sm transition-all flex items-center gap-2 ${guardando || !nuevaPassword || !confirmarPassword ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                            className={`w-full sm:w-auto font-bold py-3 sm:py-2.5 px-6 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 ${guardando || !nuevaPassword || !confirmarPassword ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
                         >
                             {guardando ? 'Actualizando...' : 'Guardar Contraseña'}
                         </button>

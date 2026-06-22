@@ -21,13 +21,18 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [sidebarExpandida, setSidebarExpandida] = useState(true);
+  const [sidebarExpandida, setSidebarExpandida] = useState(false); // Inicia cerrado en móviles por comodidad
   const [rolUsuario, setRolUsuario] = useState("");
   const [nombreUsuario, setNombreUsuario] = useState("");
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
+    // Si es pantalla grande de computadora, lo abrimos por defecto
+    if (window.innerWidth >= 768) {
+      setSidebarExpandida(true);
+    }
+      
     const recuperarSesion = async () => {
       const { data: { session } } = await supabase.auth.getSession();
 
@@ -79,20 +84,26 @@ export default function DashboardLayout({
     };
   }, []);
 
-  // Ocultar layout si el rol aún no carga
   if (!rolUsuario) {
     return <div className="min-h-screen bg-gray-100 flex items-center justify-center font-bold text-blue-900">Cargando sistema PRESAV...</div>;
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100 overflow-hidden">
-      {/* SIDEBAR CON LÓGICA DE COLAPSO */}
-      <aside className={`bg-blue-900 text-white flex flex-col shadow-2xl z-20 shrink-0 transition-all duration-300 relative ${sidebarExpandida ? 'w-64' : 'w-20'}`}>
+    <div className="flex min-h-screen bg-gray-100 overflow-hidden relative">
+      
+      {/* NUEVO: Fondo oscuro que solo aparece en móvil cuando el menú se expande */}
+      <div 
+        className={`fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300 ${sidebarExpandida ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => setSidebarExpandida(false)}
+      />
 
-        {/* Botón flotante para expandir/colapsar */}
+      {/* SIDEBAR CON TU DISEÑO ORIGINAL (Flota en móvil, empuja en PC) */}
+      <aside className={`bg-blue-900 text-white flex flex-col shadow-2xl z-50 shrink-0 transition-all duration-300 h-screen absolute md:relative left-0 top-0 ${sidebarExpandida ? 'w-64' : 'w-20'}`}>
+
+        {/* Botón flotante para expandir/colapsar intacto */}
         <button
           onClick={() => setSidebarExpandida(!sidebarExpandida)}
-          className="absolute -right-3.5 top-8 bg-orange-500 text-white rounded-full p-1.5 shadow-lg hover:bg-orange-600 transition-colors z-30"
+          className="absolute -right-3.5 top-8 bg-orange-500 text-white rounded-full p-1.5 shadow-lg hover:bg-orange-600 transition-colors z-50"
           title={sidebarExpandida ? "Ocultar panel" : "Mostrar panel"}
         >
           {sidebarExpandida ? <IconChevronLeft size={16} stroke={3} /> : <IconChevronRight size={16} stroke={3} />}
@@ -115,7 +126,7 @@ export default function DashboardLayout({
           {(rolUsuario === "administrador" || rolUsuario === "profesor") && (
             <Link
               href="/resoluciones"
-              title="Generar Resolución"
+              onClick={() => { if(window.innerWidth < 768) setSidebarExpandida(false) }}
               className={`p-3 rounded-xl transition-all font-medium flex items-center gap-3 ${pathname === "/resoluciones" ? 'bg-orange-500 shadow-md' : 'hover:bg-blue-800 text-blue-100'} ${!sidebarExpandida && 'justify-center'}`}
             >
               <IconFileDescription size={20} className="shrink-0" />
@@ -126,7 +137,7 @@ export default function DashboardLayout({
           {rolUsuario === "administrador" && (
             <Link
               href="/usuarios"
-              title="Gestión de Usuarios"
+              onClick={() => { if(window.innerWidth < 768) setSidebarExpandida(false) }}
               className={`p-3 rounded-xl transition-all font-medium flex items-center gap-3 ${pathname === "/usuarios" ? 'bg-orange-500 shadow-md' : 'hover:bg-blue-800 text-blue-100'} ${!sidebarExpandida && 'justify-center'}`}
             >
               <IconUsersGroup size={20} className="shrink-0" />
@@ -134,11 +145,10 @@ export default function DashboardLayout({
             </Link>
           )}
 
-          {/* NUEVO BOTÓN: GESTIÓN DE CONSIDERANDOS */}
           {(rolUsuario === "administrador" || rolUsuario === "profesor") && (
             <Link
               href="/gestion-considerandos"
-              title="Gestión de Considerandos"
+              onClick={() => { if(window.innerWidth < 768) setSidebarExpandida(false) }}
               className={`p-3 rounded-xl transition-all font-medium flex items-center gap-3 ${pathname === "/gestion-considerandos" ? 'bg-orange-500 shadow-md' : 'hover:bg-blue-800 text-blue-100'} ${!sidebarExpandida && 'justify-center'}`}
             >
               <IconClipboardList size={20} className="shrink-0" />
@@ -148,7 +158,7 @@ export default function DashboardLayout({
 
           <Link
             href="/mis-tramites"
-            title="Mis Trámites"
+            onClick={() => { if(window.innerWidth < 768) setSidebarExpandida(false) }}
             className={`p-3 rounded-xl transition-all font-medium flex items-center gap-3 ${pathname === "/mis-tramites" ? 'bg-orange-500 shadow-md' : 'hover:bg-blue-800 text-blue-100'} ${!sidebarExpandida && 'justify-center'}`}
           >
             {rolUsuario === "estudiante" ? <IconSchool size={20} className="shrink-0" /> : <IconBooks size={20} className="shrink-0" />}
@@ -157,7 +167,7 @@ export default function DashboardLayout({
 
           <Link
             href="/perfil"
-            title="Mi Perfil"
+            onClick={() => { if(window.innerWidth < 768) setSidebarExpandida(false) }}
             className={`p-3 rounded-xl transition-all font-medium flex items-center gap-3 ${pathname === "/perfil" ? 'bg-orange-500 shadow-md' : 'hover:bg-blue-800 text-blue-100'} ${!sidebarExpandida && 'justify-center'}`}
           >
             <IconSettings size={20} className="shrink-0" />
@@ -184,8 +194,9 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      <main className="flex-1 h-screen overflow-y-auto bg-gray-100 relative">
-        <div className="p-8 max-w-7xl mx-auto">
+      {/* CONTENEDOR PRINCIPAL: En móvil le dejamos un margen izquierdo (ml-20) para que el menú colapsado no lo tape */}
+      <main className="flex-1 h-screen overflow-y-auto bg-gray-100 ml-20 md:ml-0 transition-all duration-300">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto">
           {children}
         </div>
       </main>

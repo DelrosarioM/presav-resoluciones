@@ -72,7 +72,7 @@ export function ResolucionesProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     async function cargarConsiderandos() {
       try {
-        const { data, error } = await supabase.from('ConsiderandosCatalogo').select('*').eq('activo', true);
+        const { data, error } = await supabase.from('ConsiderandosCatalogo').select('*, CategoriaConsiderando(nombre)').eq('activo', true);
         if (error) console.error("Error de Supabase:", error);
         else if (data) setConsiderandosBD(data);
       } catch (err) {
@@ -109,9 +109,9 @@ export function ResolucionesProvider({ children }: { children: React.ReactNode }
     if (!formulario.fechaComision) nuevosErrores.fechaComision = "Requerido";
     if (!formulario.planteamiento.trim()) nuevosErrores.planteamiento = "Requerido";
 
-    if (Object.keys(nuevosErrores).length > 0) { 
-        setErrores(nuevosErrores); 
-        return; 
+    if (Object.keys(nuevosErrores).length > 0) {
+      setErrores(nuevosErrores);
+      return;
     }
 
     // Guardar en el historial del navegador antes de avanzar
@@ -122,9 +122,9 @@ export function ResolucionesProvider({ children }: { children: React.ReactNode }
   const toggleConsiderando = (considerando: any) => {
     const yaExiste = considerandosSeleccionados.find(c => c.id === considerando.id);
     if (yaExiste) {
-        setConsiderandosSeleccionados(considerandosSeleccionados.filter(c => c.id !== considerando.id));
+      setConsiderandosSeleccionados(considerandosSeleccionados.filter(c => c.id !== considerando.id));
     } else {
-        setConsiderandosSeleccionados([...considerandosSeleccionados, { ...considerando, texto: considerando.texto_plantilla }]);
+      setConsiderandosSeleccionados([...considerandosSeleccionados, { ...considerando, texto: considerando.texto_plantilla }]);
     }
   };
 
