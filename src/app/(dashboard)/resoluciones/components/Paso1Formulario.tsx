@@ -66,10 +66,20 @@ export default function Paso1Formulario() {
                                 <div className="w-1/2 flex flex-col">
                                     <input type="text" name="acta" value={formulario.acta} onChange={manejarCambio} placeholder="Acta (Ej. 113)" className={`p-3 sm:p-4 rounded-xl border focus:ring-2 focus:ring-blue-500 text-sm sm:text-lg text-gray-900 font-medium placeholder-gray-400 focus:outline-none min-w-0 ${errores.acta ? 'border-red-500' : 'border-gray-300'}`} />
                                     {errores.acta && <span className="text-red-500 text-xs sm:text-sm font-bold mt-1">{errores.acta}</span>}
+                                    {historial?.acta && (
+                                        <button type="button" onClick={() => setFormulario({ ...formulario, acta: historial.acta })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
+                                            <IconHistory size={12} /> Última: <span className="font-semibold text-gray-600">{historial.acta}</span>
+                                        </button>
+                                    )}
                                 </div>
                                 <div className="w-1/2 flex flex-col">
                                     <input type="text" name="punto" value={formulario.punto} onChange={manejarCambio} placeholder="Punto (Ej. 50)" className={`p-3 sm:p-4 rounded-xl border focus:ring-2 focus:ring-blue-500 text-sm sm:text-lg text-gray-900 font-medium placeholder-gray-400 focus:outline-none min-w-0 ${errores.punto ? 'border-red-500' : 'border-gray-300'}`} />
                                     {errores.punto && <span className="text-red-500 text-xs sm:text-sm font-bold mt-1">{errores.punto}</span>}
+                                    {historial?.punto && (
+                                        <button type="button" onClick={() => setFormulario({ ...formulario, punto: historial.punto })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
+                                            <IconHistory size={12} /> Último: <span className="font-semibold text-gray-600">{historial.punto}</span>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -85,6 +95,11 @@ export default function Paso1Formulario() {
                                 className={`p-3 sm:p-4 rounded-xl border focus:ring-2 focus:ring-blue-500 text-sm sm:text-lg text-gray-900 font-medium bg-white focus:outline-none cursor-pointer w-full ${errores.fechaComision ? 'border-red-500' : 'border-gray-300'}`}
                             />
                             {errores.fechaComision && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.fechaComision}</span>}
+                            {historial?.fechaComision && (
+                                <button type="button" onClick={() => setFormulario({ ...formulario, fechaComision: historial.fechaComision })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
+                                    <IconHistory size={12} /> Última: <span className="font-semibold text-gray-600">{historial.fechaComision}</span>
+                                </button>
+                            )}
                         </div>
                     </div>
                 </section>
@@ -104,12 +119,22 @@ export default function Paso1Formulario() {
                                 <input type="text" name="cedula" value={formulario.cedula} onChange={manejarCambio} placeholder="16425388" className="flex-1 min-w-0 p-3 sm:p-4 focus:outline-none text-sm sm:text-lg text-gray-900 font-medium placeholder-gray-400" maxLength={9} />
                             </div>
                             {errores.cedula && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.cedula}</span>}
+                            {historial?.cedula && (
+                                <button type="button" onClick={() => setFormulario({ ...formulario, cedula: historial.cedula, nacionalidad: historial.nacionalidad || 'V' })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
+                                    <IconHistory size={12} /> Última: <span className="font-semibold text-gray-600">{historial.nacionalidad || 'V'}-{historial.cedula}</span>
+                                </button>
+                            )}
                         </div>
 
                         <div className="flex flex-col gap-2">
                             <label className="font-medium text-gray-700 text-sm sm:text-base">Nombre Completo *</label>
                             <input type="text" name="nombre" value={formulario.nombre} onChange={manejarCambio} placeholder="Ej. Yailmar Galindez" className={`p-3 sm:p-4 rounded-xl border focus:ring-2 focus:ring-blue-500 text-sm sm:text-lg text-gray-900 font-medium placeholder-gray-400 min-w-0 ${errores.nombre ? 'border-red-500' : 'border-gray-300'}`} />
                             {errores.nombre && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.nombre}</span>}
+                            {historial?.nombre && (
+                                <button type="button" onClick={() => setFormulario({ ...formulario, nombre: historial.nombre })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
+                                    <IconHistory size={12} className="shrink-0" /> <span className="truncate max-w-[200px] sm:max-w-xs">Último: <span className="font-semibold text-gray-600">{acortarTexto(historial.nombre, 25)}</span></span>
+                                </button>
+                            )}
                         </div>
 
                         {/* Programa Académico */}
@@ -121,6 +146,11 @@ export default function Paso1Formulario() {
                                 <option value="Maestría en Gerencia Pública">Maestría en Gerencia Pública</option>
                             </select>
                             {errores.programa && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.programa}</span>}
+                            {historial?.programa && (
+                                <button type="button" onClick={() => setFormulario({ ...formulario, programa: historial.programa })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
+                                    <IconHistory size={12} className="shrink-0" /> <span className="truncate max-w-[200px] sm:max-w-xs">Último: <span className="font-semibold text-gray-600">{acortarTexto(historial.programa, 25)}</span></span>
+                                </button>
+                            )}
                         </div>
 
                         {/* Sede */}
@@ -134,6 +164,11 @@ export default function Paso1Formulario() {
                                 <option value="VPRR San Fernando">VPRR San Fernando</option>
                             </select>
                             {errores?.sede && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.sede}</span>}
+                            {historial?.sede && (
+                                <button type="button" onClick={() => setFormulario({ ...formulario, sede: historial.sede })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
+                                    <IconHistory size={12} /> Última: <span className="font-semibold text-gray-600">{historial.sede}</span>
+                                </button>
+                            )}
                         </div>
 
                         <div className="flex flex-col gap-2 md:col-span-2">
@@ -147,6 +182,11 @@ export default function Paso1Formulario() {
                                 className={`p-3 sm:p-4 rounded-xl border focus:ring-2 focus:ring-blue-500 text-sm sm:text-lg text-gray-900 font-medium bg-white focus:outline-none resize-y w-full ${errores.planteamiento ? 'border-red-500' : 'border-gray-300'}`}
                             />
                             {errores.planteamiento && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.planteamiento}</span>}
+                            {historial?.planteamiento && (
+                                <button type="button" onClick={() => setFormulario({ ...formulario, planteamiento: historial.planteamiento })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
+                                    <IconHistory size={12} className="shrink-0" /> <span className="truncate w-full max-w-[200px] sm:max-w-md">Último: <span className="font-semibold text-gray-600">{acortarTexto(historial.planteamiento, 50)}</span></span>
+                                </button>
+                            )}
                         </div>
                     </div>
                 </section>

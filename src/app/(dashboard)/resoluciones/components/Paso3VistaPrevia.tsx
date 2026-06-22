@@ -1,5 +1,6 @@
 import React from "react";
-import { IconCheck, IconX, IconArrowLeft, IconFileWord, IconBrandFacebook, IconBrandTwitter, IconBrandInstagram, IconClock } from "@tabler/icons-react";
+// Se agregó IconArrowUp a las importaciones
+import { IconCheck, IconX, IconArrowLeft, IconFileWord, IconBrandFacebook, IconBrandTwitter, IconBrandInstagram, IconClock, IconArrowUp } from "@tabler/icons-react";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { saveAs } from "file-saver";
@@ -45,8 +46,8 @@ export default function Paso3VistaPrevia() {
                 acta: formulario.acta || "[ACTA]",
                 punto: formulario.punto || "[PUNTO]",
                 considerandos: considerandosFormateados,
-                // AJUSTE: Lógica actualizada para incluir DIFERIR en el Word
-                veredicto: veredicto ? (veredicto === "Aprobado" ? "APROBAR" : veredicto === "Negado" ? "NEGAR" : "DIFERIR") : "[VEREDICTO]",
+                // AJUSTE: Lógica actualizada para incluir ELEVAR en el Word
+                veredicto: veredicto ? (veredicto === "Aprobado" ? "APROBAR" : veredicto === "Negado" ? "NEGAR" : veredicto === "Diferido" ? "DIFERIR" : "ELEVAR") : "[VEREDICTO]",
                 texto_resolucion: textoResolucion || "[Redacción de la resolución final]",
                 presidente: "Dr. Reynaldo Mujica",
                 secretaria: "Dra. Carmen Pinto"
@@ -103,25 +104,32 @@ export default function Paso3VistaPrevia() {
                 <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6 border-b border-gray-100 pb-3">Decisión de la Comisión</h2>
                 <div className="mb-6">
                     <label className="block font-medium text-gray-700 mb-3 text-sm">Veredicto Final:</label>
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                    {/* AJUSTE: Cambiamos a GRID para que los 4 botones se organicen perfectamente en 2 columnas en móvil y 4 en PC */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                         <button
                             onClick={() => setVeredicto("Aprobado")}
-                            className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Aprobado" ? 'bg-green-50 border-green-500 text-green-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
+                            className={`py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Aprobado" ? 'bg-green-50 border-green-500 text-green-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
                         >
                             <IconCheck size={20} /> APROBAR
                         </button>
                         <button
                             onClick={() => setVeredicto("Negado")}
-                            className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Negado" ? 'bg-red-50 border-red-500 text-red-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
+                            className={`py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Negado" ? 'bg-red-50 border-red-500 text-red-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
                         >
                             <IconX size={20} /> NEGAR
                         </button>
-                        {/* AJUSTE: Nuevo botón DIFERIR */}
                         <button
                             onClick={() => setVeredicto("Diferido")}
-                            className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Diferido" ? 'bg-orange-50 border-orange-500 text-orange-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
+                            className={`py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Diferido" ? 'bg-orange-50 border-orange-500 text-orange-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
                         >
                             <IconClock size={20} /> DIFERIR
+                        </button>
+                        {/* NUEVO BOTÓN: ELEVAR */}
+                        <button
+                            onClick={() => setVeredicto("Elevado")}
+                            className={`py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Elevado" ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
+                        >
+                            <IconArrowUp size={20} /> ELEVAR
                         </button>
                     </div>
                 </div>
@@ -129,8 +137,8 @@ export default function Paso3VistaPrevia() {
                     <label className="block font-medium text-gray-700 mb-2 text-sm">Redacción de la Resolución:</label>
                     <div className="flex flex-col sm:flex-row rounded-xl border border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 bg-white overflow-hidden shadow-sm transition-all">
                         <div className="py-3 sm:py-4 px-4 sm:px-5 bg-gray-50 border-b sm:border-b-0 sm:border-r border-gray-200 font-bold text-gray-800 shrink-0 select-none flex items-center justify-center sm:justify-start w-full sm:w-auto">
-                            {/* AJUSTE: Lógica de etiqueta ÚNICO actualizada */}
-                            ÚNICO: {veredicto ? (veredicto === "Aprobado" ? "APROBAR" : veredicto === "Negado" ? "NEGAR" : "DIFERIR") : "[SELECCIONE VEREDICTO]"}
+                            {/* AJUSTE: Lógica de la etiqueta "ÚNICO" actualizada para soportar ELEVAR */}
+                            ÚNICO: {veredicto ? (veredicto === "Aprobado" ? "APROBAR" : veredicto === "Negado" ? "NEGAR" : veredicto === "Diferido" ? "DIFERIR" : "ELEVAR") : "[SELECCIONE VEREDICTO]"}
                         </div>
                         <textarea
                             rows={4}
@@ -187,8 +195,8 @@ export default function Paso3VistaPrevia() {
                                 <p>LA COMISIÓN ASESORA RESUELVE:</p>
                             </div>
                             <div className="text-justify mb-6 sm:mb-8" style={{ color: '#000000', lineHeight: '1.5' }}>
-                                {/* AJUSTE: Lógica de ÚNICO actualizada en la vista previa del documento */}
-                                <p><span className="font-bold">ÚNICO: {veredicto ? (veredicto === "Aprobado" ? "APROBAR" : veredicto === "Negado" ? "NEGAR" : "DIFERIR") : "[VEREDICTO]"}</span> {textoResolucion || "[Redacción de la resolución final irá aquí...]"}</p>
+                                {/* AJUSTE: Lógica del texto "ÚNICO" actualizada en la vista previa del documento para soportar ELEVAR */}
+                                <p><span className="font-bold">ÚNICO: {veredicto ? (veredicto === "Aprobado" ? "APROBAR" : veredicto === "Negado" ? "NEGAR" : veredicto === "Diferido" ? "DIFERIR" : "ELEVAR") : "[VEREDICTO]"}</span> {textoResolucion || "[Redacción de la resolución final irá aquí...]"}</p>
                             </div>
                             <div className="text-justify" style={{ color: '#000000', lineHeight: '1.5' }}>
                                 <p>Notifíquese a la parte interesada. La documentación digitalizada se archiva. Cúmplase.</p>

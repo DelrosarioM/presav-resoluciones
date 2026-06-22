@@ -15,7 +15,7 @@ interface FormulariosState {
   cedula: string;
   nombre: string;
   programa: string;
-  sede: string; // <-- AÑADIDO
+  sede: string;
   planteamiento: string;
 }
 
@@ -26,8 +26,9 @@ interface ResolucionesContextType {
   cargandoConsiderandos: boolean;
   considerandosSeleccionados: any[];
   setConsiderandosSeleccionados: React.Dispatch<React.SetStateAction<any[]>>;
-  veredicto: "Aprobado" | "Negado" | "Diferido" | ""; // <-- Ajuste para incluir Diferido
-  setVeredicto: React.Dispatch<React.SetStateAction<"Aprobado" | "Negado" | "Diferido" | "">>;
+  // AJUSTE: Agregamos "Elevado" a la lista de tipos permitidos
+  veredicto: "Aprobado" | "Negado" | "Diferido" | "Elevado" | "";
+  setVeredicto: React.Dispatch<React.SetStateAction<"Aprobado" | "Negado" | "Diferido" | "Elevado" | "">>;
   textoResolucion: string;
   setTextoResolucion: React.Dispatch<React.SetStateAction<string>>;
   busqueda: string;
@@ -51,7 +52,8 @@ export function ResolucionesProvider({ children }: { children: React.ReactNode }
   const [considerandosBD, setConsiderandosBD] = useState<any[]>([]);
   const [cargandoConsiderandos, setCargandoConsiderandos] = useState(true);
   const [considerandosSeleccionados, setConsiderandosSeleccionados] = useState<any[]>([]);
-  const [veredicto, setVeredicto] = useState<"Aprobado" | "Negado" | "Diferido" | "">("");
+  // AJUSTE: Actualizamos el estado inicial para aceptar "Elevado"
+  const [veredicto, setVeredicto] = useState<"Aprobado" | "Negado" | "Diferido" | "Elevado" | "">("");
   const [textoResolucion, setTextoResolucion] = useState("");
   const [busqueda, setBusqueda] = useState("");
   const [errores, setErrores] = useState<Record<string, string>>({});
@@ -67,7 +69,7 @@ export function ResolucionesProvider({ children }: { children: React.ReactNode }
     cedula: "",
     nombre: "",
     programa: "",
-    sede: "", // <-- AÑADIDO
+    sede: "",
     planteamiento: ""
   });
 
@@ -109,7 +111,7 @@ export function ResolucionesProvider({ children }: { children: React.ReactNode }
     else if (formulario.nombre.trim().length < 5) nuevosErrores.nombre = "Ingrese el nombre completo";
 
     if (!formulario.programa) nuevosErrores.programa = "Seleccione un programa";
-    if (!formulario.sede) nuevosErrores.sede = "Seleccione una sede"; // <-- AÑADIDO
+    if (!formulario.sede) nuevosErrores.sede = "Seleccione una sede";
 
     if (!formulario.fechaComision) nuevosErrores.fechaComision = "Requerido";
     if (!formulario.planteamiento.trim()) nuevosErrores.planteamiento = "Requerido";
@@ -119,7 +121,6 @@ export function ResolucionesProvider({ children }: { children: React.ReactNode }
       return;
     }
 
-    // Guardar en el historial del navegador antes de avanzar
     localStorage.setItem('presav_historial_form', JSON.stringify(formulario));
     setPaso(2);
   };
@@ -142,7 +143,6 @@ export function ResolucionesProvider({ children }: { children: React.ReactNode }
   };
 
   const limpiarFormulario = () => {
-    // Ya no usamos window.confirm porque ahora tenemos nuestro propio modal moderno
     setPaso(1);
     setFormulario({
       tipoResolucion: "ORDINARIA",
@@ -155,7 +155,7 @@ export function ResolucionesProvider({ children }: { children: React.ReactNode }
       cedula: "",
       nombre: "",
       programa: "",
-      sede: "", // <-- AÑADIDO
+      sede: "",
       planteamiento: ""
     });
     setConsiderandosSeleccionados([]);
