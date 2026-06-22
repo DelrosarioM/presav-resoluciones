@@ -1,4 +1,3 @@
-// src/components/Paso3VistaPrevia.tsx
 import React from "react";
 import { IconCheck, IconX, IconArrowLeft, IconFileWord, IconBrandFacebook, IconBrandTwitter, IconBrandInstagram, IconClock } from "@tabler/icons-react";
 import PizZip from "pizzip";
@@ -99,7 +98,7 @@ export default function Paso3VistaPrevia() {
                 </button>
             </div>
 
-            {/* CAJA DE DECISIÓN DE LA COMISIÓN */}
+            {/* CAJA DE DECISIÓN DE LA COMISIÓN (Blanca) */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 sm:p-8 max-w-4xl mx-auto w-full">
                 <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6 border-b border-gray-100 pb-3">Decisión de la Comisión</h2>
                 <div className="mb-6">

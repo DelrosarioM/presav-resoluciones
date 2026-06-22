@@ -20,11 +20,10 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="es" // Cambiado a español
-      className="h-full antialiased"
+      lang="es"
+      className="h-full antialiased dark" 
     >
-      {/* Aplicamos la fuente Inter, un fondo base gris claro y texto oscuro para toda la app */}
-      <body className={`${inter.className} min-h-full flex flex-col bg-gray-100 text-gray-900`}>
+      <body className={`${inter.className} min-h-full flex flex-col bg-gray-100 text-gray-900 dark:bg-[#0A1128] dark:text-gray-100 transition-colors duration-500`}>
         {children}
       </body>
     </html>
