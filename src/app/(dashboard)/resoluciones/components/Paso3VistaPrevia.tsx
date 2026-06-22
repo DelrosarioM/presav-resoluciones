@@ -1,6 +1,6 @@
 // src/components/Paso3VistaPrevia.tsx
 import React from "react";
-import { IconCheck, IconX, IconArrowLeft, IconFileWord, IconBrandFacebook, IconBrandTwitter, IconBrandInstagram } from "@tabler/icons-react";
+import { IconCheck, IconX, IconArrowLeft, IconFileWord, IconBrandFacebook, IconBrandTwitter, IconBrandInstagram, IconClock } from "@tabler/icons-react";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { saveAs } from "file-saver";
@@ -46,7 +46,8 @@ export default function Paso3VistaPrevia() {
                 acta: formulario.acta || "[ACTA]",
                 punto: formulario.punto || "[PUNTO]",
                 considerandos: considerandosFormateados,
-                veredicto: veredicto ? (veredicto === "Aprobado" ? "APROBAR" : "NEGAR") : "[VEREDICTO]",
+                // AJUSTE: Lógica actualizada para incluir DIFERIR en el Word
+                veredicto: veredicto ? (veredicto === "Aprobado" ? "APROBAR" : veredicto === "Negado" ? "NEGAR" : "DIFERIR") : "[VEREDICTO]",
                 texto_resolucion: textoResolucion || "[Redacción de la resolución final]",
                 presidente: "Dr. Reynaldo Mujica",
                 secretaria: "Dra. Carmen Pinto"
@@ -65,7 +66,6 @@ export default function Paso3VistaPrevia() {
         }
     };
 
-    // AJUSTE: El encabezado ahora responde al tamaño de la pantalla
     const EncabezadoDocumento = () => (
         <div className="flex justify-between items-center mb-6 sm:mb-8 border-b-2 pb-4 gap-2 sm:gap-0" style={{ borderColor: '#000000' }}>
             <div className="shrink-0 w-16 sm:w-48 flex justify-start"><img src="/logo-unellez.png" alt="Logo UNELLEZ" className="h-12 sm:h-24 w-auto object-contain" /></div>
@@ -109,21 +109,29 @@ export default function Paso3VistaPrevia() {
                             onClick={() => setVeredicto("Aprobado")}
                             className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Aprobado" ? 'bg-green-50 border-green-500 text-green-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
                         >
-                            <IconCheck size={20} /> APROBAR Solicitud
+                            <IconCheck size={20} /> APROBAR
                         </button>
                         <button
                             onClick={() => setVeredicto("Negado")}
                             className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Negado" ? 'bg-red-50 border-red-500 text-red-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
                         >
-                            <IconX size={20} /> NEGAR Solicitud
+                            <IconX size={20} /> NEGAR
+                        </button>
+                        {/* AJUSTE: Nuevo botón DIFERIR */}
+                        <button
+                            onClick={() => setVeredicto("Diferido")}
+                            className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Diferido" ? 'bg-orange-50 border-orange-500 text-orange-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
+                        >
+                            <IconClock size={20} /> DIFERIR
                         </button>
                     </div>
                 </div>
                 <div>
                     <label className="block font-medium text-gray-700 mb-2 text-sm">Redacción de la Resolución:</label>
                     <div className="flex flex-col sm:flex-row rounded-xl border border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 bg-white overflow-hidden shadow-sm transition-all">
-                        <div className="py-3 sm:py-4 px-4 sm:px-5 bg-gray-50 border-b sm:border-b-0 sm:border-r border-gray-200 font-bold text-gray-800 shrink-0 select-none flex items-center justify-center sm:justify-start">
-                            ÚNICO: {veredicto ? (veredicto === "Aprobado" ? "APROBAR" : "NEGAR") : "[SELECCIONE VEREDICTO]"}
+                        <div className="py-3 sm:py-4 px-4 sm:px-5 bg-gray-50 border-b sm:border-b-0 sm:border-r border-gray-200 font-bold text-gray-800 shrink-0 select-none flex items-center justify-center sm:justify-start w-full sm:w-auto">
+                            {/* AJUSTE: Lógica de etiqueta ÚNICO actualizada */}
+                            ÚNICO: {veredicto ? (veredicto === "Aprobado" ? "APROBAR" : veredicto === "Negado" ? "NEGAR" : "DIFERIR") : "[SELECCIONE VEREDICTO]"}
                         </div>
                         <textarea
                             rows={4}
@@ -136,7 +144,7 @@ export default function Paso3VistaPrevia() {
                 </div>
             </div>
 
-            {/* VISTA PREVIA DEL DOCUMENTO - AJUSTE A HOJA FLUIDA */}
+            {/* VISTA PREVIA DEL DOCUMENTO */}
             <div className="bg-gray-200 p-3 sm:p-8 rounded-xl flex flex-col items-center shadow-inner border border-gray-300 w-full">
                 <div id="documento-pdf" className="flex flex-col w-full max-w-[21cm] gap-6">
 
@@ -180,7 +188,8 @@ export default function Paso3VistaPrevia() {
                                 <p>LA COMISIÓN ASESORA RESUELVE:</p>
                             </div>
                             <div className="text-justify mb-6 sm:mb-8" style={{ color: '#000000', lineHeight: '1.5' }}>
-                                <p><span className="font-bold">ÚNICO: {veredicto ? (veredicto === "Aprobado" ? "APROBAR" : "NEGAR") : "[VEREDICTO]"}</span> {textoResolucion || "[Redacción de la resolución final irá aquí...]"}</p>
+                                {/* AJUSTE: Lógica de ÚNICO actualizada en la vista previa del documento */}
+                                <p><span className="font-bold">ÚNICO: {veredicto ? (veredicto === "Aprobado" ? "APROBAR" : veredicto === "Negado" ? "NEGAR" : "DIFERIR") : "[VEREDICTO]"}</span> {textoResolucion || "[Redacción de la resolución final irá aquí...]"}</p>
                             </div>
                             <div className="text-justify" style={{ color: '#000000', lineHeight: '1.5' }}>
                                 <p>Notifíquese a la parte interesada. La documentación digitalizada se archiva. Cúmplase.</p>
@@ -188,7 +197,6 @@ export default function Paso3VistaPrevia() {
                             </div>
                         </div>
                         <div className="mt-8 mb-auto">
-                            {/* AJUSTE: Firmas apiladas en móvil y lado a lado en PC */}
                             <div className="flex flex-col sm:flex-row justify-between gap-8 sm:gap-0 mb-8 sm:mb-12 text-center font-bold" style={{ color: '#000000' }}>
                                 <div className="w-full sm:w-1/2">
                                     <div className="border-t w-3/4 mx-auto pt-2" style={{ borderColor: '#000000' }}>
