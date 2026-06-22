@@ -112,14 +112,28 @@ export default function Paso1Formulario() {
                             {errores.nombre && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.nombre}</span>}
                         </div>
 
-                        <div className="flex flex-col gap-2 md:col-span-2">
-                            <label className="font-medium text-gray-700 text-sm sm:text-base">Programa / Maestría *</label>
+                        {/* Programa Académico */}
+                        <div className="flex flex-col gap-2 md:col-span-1">
+                            <label className="font-medium text-gray-700 text-sm sm:text-base">Programa académico *</label>
                             <select name="programa" value={formulario.programa} onChange={manejarCambio} className={`p-3 sm:p-4 rounded-xl border focus:ring-2 focus:ring-blue-500 text-sm sm:text-lg bg-white text-gray-900 font-medium w-full text-ellipsis overflow-hidden pr-8 ${errores.programa ? 'border-red-500' : 'border-gray-300'}`}>
                                 <option value="" className="text-gray-400">Seleccione un programa...</option>
                                 <option value="Maestría en Educación mención Docencia Universitaria">Maestría en Educación mención Docencia Universitaria</option>
                                 <option value="Maestría en Gerencia Pública">Maestría en Gerencia Pública</option>
                             </select>
                             {errores.programa && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.programa}</span>}
+                        </div>
+
+                        {/* Sede */}
+                        <div className="flex flex-col gap-2 md:col-span-1">
+                            <label className="font-medium text-gray-700 text-sm sm:text-base">Sede *</label>
+                            <select name="sede" value={formulario.sede || ""} onChange={manejarCambio} className={`p-3 sm:p-4 rounded-xl border focus:ring-2 focus:ring-blue-500 text-sm sm:text-lg bg-white text-gray-900 font-medium w-full text-ellipsis overflow-hidden pr-8 ${errores?.sede ? 'border-red-500' : 'border-gray-300'}`}>
+                                <option value="" className="text-gray-400">Seleccione una sede...</option>
+                                <option value="VIPI San Carlos">VIPI San Carlos</option>
+                                <option value="VPDS Barinas">VPDS Barinas</option>
+                                <option value="VPA Guanare">VPA Guanare</option>
+                                <option value="VPRR San Fernando">VPRR San Fernando</option>
+                            </select>
+                            {errores?.sede && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.sede}</span>}
                         </div>
 
                         <div className="flex flex-col gap-2 md:col-span-2">
