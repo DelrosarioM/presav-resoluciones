@@ -199,13 +199,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Link>
           )}
 
+          {/* BOTÓN DEL HISTORIAL DE RESOLUCIONES */}
           <Link
-            href="/mis-tramites"
+            href="/historial"
             onClick={() => { if (window.innerWidth < 768) setSidebarExpandida(false) }}
-            className={`p-3 rounded-xl transition-all font-medium flex items-center gap-3 ${pathname === "/mis-tramites" ? 'bg-orange-500 shadow-lg shadow-orange-500/30' : 'hover:bg-blue-800 dark:hover:bg-white/10 text-blue-100 dark:text-gray-300'} ${!sidebarExpandida && 'md:justify-center'}`}
+            className={`p-3 rounded-xl transition-all font-medium flex items-center gap-3 ${pathname === "/historial" ? 'bg-orange-500 shadow-lg shadow-orange-500/30' : 'hover:bg-blue-800 dark:hover:bg-white/10 text-blue-100 dark:text-gray-300'} ${!sidebarExpandida && 'md:justify-center'}`}
           >
-            {rolUsuario === "estudiante" ? <IconSchool size={20} className="shrink-0" /> : <IconBooks size={20} className="shrink-0" />}
-            {(sidebarExpandida || (typeof window !== 'undefined' && window.innerWidth < 768)) && <span className="truncate">Mis Trámites</span>}
+            <IconBooks size={20} className="shrink-0" />
+            {(sidebarExpandida || (typeof window !== 'undefined' && window.innerWidth < 768)) && <span className="truncate">Historial Resoluciones</span>}
           </Link>
 
           <Link

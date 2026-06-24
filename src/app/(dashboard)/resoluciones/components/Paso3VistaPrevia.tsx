@@ -1,68 +1,129 @@
 import React from "react";
-// Se agregó IconArrowUp a las importaciones
 import { IconCheck, IconX, IconArrowLeft, IconFileWord, IconBrandFacebook, IconBrandTwitter, IconBrandInstagram, IconClock, IconArrowUp } from "@tabler/icons-react";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { saveAs } from "file-saver";
+import { supabase } from "@/lib/supabase";
 
 import { useResoluciones } from "../context/ResolucionesContext";
 
 export default function Paso3VistaPrevia() {
-    const { setPaso, veredicto, setVeredicto, textoResolucion, setTextoResolucion, formulario, considerandosSeleccionados } = useResoluciones();
+    const { setPaso, veredicto, setVeredicto, textoResolucion, setTextoResolucion, formulario, considerandosSeleccionados, idEdicion } = useResoluciones();
+
     const formatearFecha = (fechaISO: string) => {
         if (!fechaISO) return "[FECHA]";
         const [año, mes, dia] = fechaISO.split('-');
         return `${dia}/${mes}/${año}`;
     };
 
-    // Función para generar el documento en Word (docx)
+    const unidadEjecutoraDinamica = formulario.unidadEjecutora || "SUBPROGRAMA CIENCIAS DE LA EDUCACIÓN Y HUMANIDADES";
+
     const generarWord = async () => {
+        if (!veredicto) {
+            alert("Por favor, seleccione un veredicto antes de generar el documento.");
+            return;
+        }
+
         try {
-            // 1. Cargar la plantilla base desde la carpeta public
+            const { data: { session } } = await supabase.auth.getSession();
+            let creadoPorId = null;
+
+            if (session?.user?.email) {
+                const cedulaFormateada = session.user.email.split('@')[0].toUpperCase();
+                const { data: userData } = await supabase.from('Usuario').select('id').eq('cedula', cedulaFormateada).single();
+                if (userData) creadoPorId = userData.id;
+            }
+
+            const tipoResolucionFormateado = formulario.tipoResolucion.toLowerCase();
+
+            const veredictoMapper: Record<string, string> = {
+                "Aprobado": "aprobado",
+                "Negado": "negado",
+                "Diferido": "diferido",
+                "Elevado": "elevado"
+            };
+            const veredictoFormateado = veredictoMapper[veredicto] || "diferido";
+
+            // OBJETO DE DATOS UNIFICADO CON LOS NUEVOS CAMPOS
+            const payloadResolucion = {
+                tipo_resolucion: tipoResolucionFormateado,
+                anio: parseInt(formulario.ano),
+                correlativo: parseInt(formulario.correlativo),
+                autoridad_solicitante: formulario.nombre,
+                fecha_comision: formulario.fechaComision,
+                acta_numero: formulario.acta,
+                punto_numero: formulario.punto,
+                tipo_solicitud: formulario.planteamiento,
+                veredicto: veredictoFormateado,
+                texto_unico: textoResolucion,
+                profesor_autor_id: creadoPorId,
+                unidad_ejecutora: formulario.unidadEjecutora,
+
+                // --- ¡AQUÍ ESTÁN LOS CAMPOS NUEVOS QUE FALTABAN! ---
+                nacionalidad_solicitante: formulario.nacionalidad,
+                cedula_solicitante: formulario.cedula,
+                programa_academico: formulario.programa,
+                sede: formulario.sede,
+                considerandos_guardados: considerandosSeleccionados
+            };
+
+            // LÓGICA DE DECISIÓN DINÁMICA: ¿Es edición o creación nueva?
+            if (idEdicion) {
+                // EDICIÓN PROTÉGIDA
+                const { error: updateError } = await supabase
+                    .from('Resoluciones')
+                    .update(payloadResolucion)
+                    .eq('id', idEdicion);
+
+                if (updateError) throw updateError;
+                console.log("Resolución existente actualizada con éxito en la base de datos.");
+            } else {
+                // CREACIÓN TRADICIONAL
+                const { error: insertError } = await supabase
+                    .from('Resoluciones')
+                    .insert(payloadResolucion);
+
+                if (insertError) throw insertError;
+                console.log("Nueva resolución registrada con éxito en la base de datos.");
+            }
+
+            // Generación del Archivo Word
             const response = await fetch('/plantilla_resolucion.docx');
             if (!response.ok) throw new Error("No se pudo cargar la plantilla base.");
             const arrayBuffer = await response.arrayBuffer();
 
-            // 2. Inicializar PizZip y docxtemplater
             const zip = new PizZip(arrayBuffer);
-            const doc = new Docxtemplater(zip, {
-                paragraphLoop: true,
-                linebreaks: true,
-            });
+            const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
-            // 3. Formatear considerandos (eliminar etiquetas HTML como <b> y <br/>)
             const considerandosFormateados = considerandosSeleccionados.map((item: any) => ({
                 texto: item.texto.replace(/<[^>]*>?/gm, '')
             }));
 
-            // 4. Inyectar datos en las etiquetas de la plantilla
             doc.render({
                 tipo_resolucion: formulario.tipoResolucion === "EXTRAORDINARIA" ? "EXTRAORDINARIA" : "ORDINARIA",
                 anio: formulario.ano || new Date().getFullYear(),
                 correlativo: formulario.correlativo || "[NUMERO]",
-                unidad_ejecutora: "SUBPROGRAMA CIENCIAS DE LA EDUCACIÓN Y HUMANIDADES",
+                unidad_ejecutora: formulario.unidadEjecutora,
                 planteamiento: formulario.planteamiento || "[PLANTEAMIENTO]",
                 fecha: formatearFecha(formulario.fechaComision),
                 acta: formulario.acta || "[ACTA]",
                 punto: formulario.punto || "[PUNTO]",
                 considerandos: considerandosFormateados,
-                // AJUSTE: Lógica actualizada para incluir ELEVAR en el Word
-                veredicto: veredicto ? (veredicto === "Aprobado" ? "APROBAR" : veredicto === "Negado" ? "NEGAR" : veredicto === "Diferido" ? "DIFERIR" : "ELEVAR") : "[VEREDICTO]",
+                veredicto: veredicto === "Aprobado" ? "APROBAR" : veredicto === "Negado" ? "NEGAR" : veredicto === "Diferido" ? "DIFERIR" : "CONSEJO DIRECTIVO (ELEVADO)",
                 texto_resolucion: textoResolucion || "[Redacción de la resolución final]",
                 presidente: "Dr. Reynaldo Mujica",
                 secretaria: "Dra. Carmen Pinto"
             });
 
-            // 5. Generar el archivo y descargarlo
             const blob = doc.getZip().generate({
                 type: "blob",
                 mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             });
-            saveAs(blob, `Resolucion_PRESAV_${formulario.correlativo || "Borrador"}_${formulario.cedula}.docx`);
+            saveAs(blob, `Resolucion_PRESAV_${formulario.correlativo || "Borrador"}.docx`);
 
         } catch (error) {
-            console.error("Error al generar el documento Word:", error);
-            alert("Ocurrió un error al generar el archivo Word. Asegúrate de que la plantilla esté configurada correctamente.");
+            console.error("Error procesando el documento:", error);
+            alert("Ocurrió un error al guardar o descargar el documento.");
         }
     };
 
@@ -99,12 +160,10 @@ export default function Paso3VistaPrevia() {
                 </button>
             </div>
 
-            {/* CAJA DE DECISIÓN DE LA COMISIÓN (Blanca) */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 sm:p-8 max-w-4xl mx-auto w-full">
                 <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6 border-b border-gray-100 pb-3">Decisión de la Comisión</h2>
                 <div className="mb-6">
                     <label className="block font-medium text-gray-700 mb-3 text-sm">Veredicto Final:</label>
-                    {/* AJUSTE: Cambiamos a GRID para que los 4 botones se organicen perfectamente en 2 columnas en móvil y 4 en PC */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                         <button
                             onClick={() => setVeredicto("Aprobado")}
@@ -124,7 +183,6 @@ export default function Paso3VistaPrevia() {
                         >
                             <IconClock size={20} /> DIFERIR
                         </button>
-                        {/* NUEVO BOTÓN: ELEVAR */}
                         <button
                             onClick={() => setVeredicto("Elevado")}
                             className={`py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Elevado" ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
@@ -137,7 +195,6 @@ export default function Paso3VistaPrevia() {
                     <label className="block font-medium text-gray-700 mb-2 text-sm">Redacción de la Resolución:</label>
                     <div className="flex flex-col sm:flex-row rounded-xl border border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 bg-white overflow-hidden shadow-sm transition-all">
                         <div className="py-3 sm:py-4 px-4 sm:px-5 bg-gray-50 border-b sm:border-b-0 sm:border-r border-gray-200 font-bold text-gray-800 shrink-0 select-none flex items-center justify-center sm:justify-start w-full sm:w-auto">
-                            {/* AJUSTE: Lógica de la etiqueta "ÚNICO" actualizada para soportar ELEVAR */}
                             ÚNICO: {veredicto ? (veredicto === "Aprobado" ? "APROBAR" : veredicto === "Negado" ? "NEGAR" : veredicto === "Diferido" ? "DIFERIR" : "ELEVAR") : "[SELECCIONE VEREDICTO]"}
                         </div>
                         <textarea
@@ -151,11 +208,8 @@ export default function Paso3VistaPrevia() {
                 </div>
             </div>
 
-            {/* VISTA PREVIA DEL DOCUMENTO */}
             <div className="bg-gray-200 p-3 sm:p-8 rounded-xl flex flex-col items-center shadow-inner border border-gray-300 w-full">
                 <div id="documento-pdf" className="flex flex-col w-full max-w-[21cm] gap-6">
-
-                    {/* HOJA 1 */}
                     <div className="bg-white text-black w-full min-h-[100vh] sm:min-h-[29.7cm] shadow-xl p-6 sm:p-16 font-serif text-xs sm:text-sm flex flex-col" style={{ backgroundColor: '#ffffff', color: '#000000' }}>
                         <div className="flex-1">
                             <EncabezadoDocumento />
@@ -164,7 +218,7 @@ export default function Paso3VistaPrevia() {
                                 <p>RESOLUCIÓN {formulario.tipoResolucion} CAPRESAV Nº{formulario.ano}/{formulario.correlativo || "[NUMERO]"}</p>
                             </div>
                             <div className="mb-4 text-justify" style={{ color: '#000000', lineHeight: '1.5' }}>
-                                <p><span className="font-bold">UNIDAD EJECUTORA:</span> SUBPROGRAMA CIENCIAS DE LA EDUCACIÓN Y HUMANIDADES</p>
+                                <p><span className="font-bold">UNIDAD EJECUTORA:</span> {unidadEjecutoraDinamica}</p>
                             </div>
                             <div className="mb-4 text-justify" style={{ color: '#000000', lineHeight: '1.5' }}>
                                 <p><span className="font-bold">PLANTEAMIENTO:</span> {formulario.planteamiento || "[PLANTEAMIENTO DEL CASO]"}</p>
@@ -187,7 +241,6 @@ export default function Paso3VistaPrevia() {
                         <PieDePaginaDocumento />
                     </div>
 
-                    {/* HOJA 2 */}
                     <div className="bg-white text-black w-full min-h-[100vh] sm:min-h-[29.7cm] shadow-xl p-6 sm:p-16 font-serif text-xs sm:text-sm flex flex-col" style={{ backgroundColor: '#ffffff', color: '#000000' }}>
                         <div className="flex-1">
                             <EncabezadoDocumento />
@@ -195,7 +248,6 @@ export default function Paso3VistaPrevia() {
                                 <p>LA COMISIÓN ASESORA RESUELVE:</p>
                             </div>
                             <div className="text-justify mb-6 sm:mb-8" style={{ color: '#000000', lineHeight: '1.5' }}>
-                                {/* AJUSTE: Lógica del texto "ÚNICO" actualizada en la vista previa del documento para soportar ELEVAR */}
                                 <p><span className="font-bold">ÚNICO: {veredicto ? (veredicto === "Aprobado" ? "APROBAR" : veredicto === "Negado" ? "NEGAR" : veredicto === "Diferido" ? "DIFERIR" : "ELEVAR") : "[VEREDICTO]"}</span> {textoResolucion || "[Redacción de la resolución final irá aquí...]"}</p>
                             </div>
                             <div className="text-justify" style={{ color: '#000000', lineHeight: '1.5' }}>
@@ -222,7 +274,6 @@ export default function Paso3VistaPrevia() {
                 </div>
             </div>
 
-            {/* BOTONES INFERIORES */}
             <div className="flex flex-col-reverse sm:flex-row justify-between items-center mt-4 max-w-4xl mx-auto w-full gap-4 px-2 sm:px-0">
                 <button onClick={() => setPaso(2)} className="w-full sm:w-auto justify-center text-blue-600 font-semibold hover:text-blue-800 transition-colors flex items-center gap-2 py-2">
                     <IconArrowLeft size={20} /> Volver a Considerandos
@@ -231,7 +282,7 @@ export default function Paso3VistaPrevia() {
                     onClick={generarWord}
                     className="w-full sm:w-auto justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl text-base shadow-sm flex items-center gap-2 transition-transform active:scale-95"
                 >
-                    <IconFileWord size={20} /> Generar Resolución (Word)
+                    <IconFileWord size={20} /> {idEdicion ? "Guardar Edición y Descargar" : "Generar Resolución (Word)"}
                 </button>
             </div>
         </div>

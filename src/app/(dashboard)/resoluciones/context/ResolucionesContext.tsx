@@ -1,9 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-// Definimos la estructura del Contexto
 interface FormulariosState {
   tipoResolucion: string;
   ano: string;
@@ -17,6 +17,7 @@ interface FormulariosState {
   programa: string;
   sede: string;
   planteamiento: string;
+  unidadEjecutora: string;
 }
 
 interface ResolucionesContextType {
@@ -26,7 +27,6 @@ interface ResolucionesContextType {
   cargandoConsiderandos: boolean;
   considerandosSeleccionados: any[];
   setConsiderandosSeleccionados: React.Dispatch<React.SetStateAction<any[]>>;
-  // AJUSTE: Agregamos "Elevado" a la lista de tipos permitidos
   veredicto: "Aprobado" | "Negado" | "Diferido" | "Elevado" | "";
   setVeredicto: React.Dispatch<React.SetStateAction<"Aprobado" | "Negado" | "Diferido" | "Elevado" | "">>;
   textoResolucion: string;
@@ -43,20 +43,23 @@ interface ResolucionesContextType {
   quitarConsiderando: (id: number) => void;
   actualizarTextoConsiderando: (id: number, nuevoTexto: string) => void;
   limpiarFormulario: () => void;
+  idEdicion: string | null;
 }
 
 const ResolucionesContext = createContext<ResolucionesContextType | undefined>(undefined);
 
-export function ResolucionesProvider({ children }: { children: React.ReactNode }) {
+function ResolucionesProviderContent({ children }: { children: React.ReactNode }) {
   const [paso, setPaso] = useState(1);
   const [considerandosBD, setConsiderandosBD] = useState<any[]>([]);
   const [cargandoConsiderandos, setCargandoConsiderandos] = useState(true);
   const [considerandosSeleccionados, setConsiderandosSeleccionados] = useState<any[]>([]);
-  // AJUSTE: Actualizamos el estado inicial para aceptar "Elevado"
   const [veredicto, setVeredicto] = useState<"Aprobado" | "Negado" | "Diferido" | "Elevado" | "">("");
   const [textoResolucion, setTextoResolucion] = useState("");
   const [busqueda, setBusqueda] = useState("");
   const [errores, setErrores] = useState<Record<string, string>>({});
+
+  const searchParams = useSearchParams();
+  const idEdicion = searchParams.get("id"); // Capturamos el ID de la URL
 
   const [formulario, setFormulario] = useState<FormulariosState>({
     tipoResolucion: "ORDINARIA",
@@ -70,23 +73,78 @@ export function ResolucionesProvider({ children }: { children: React.ReactNode }
     nombre: "",
     programa: "",
     sede: "",
-    planteamiento: ""
+    planteamiento: "",
+    unidadEjecutora: ""
   });
 
+  // EFECTO 1: Cargar catálogo base de considerandos
   useEffect(() => {
-    async function cargarConsiderandos() {
+    async function cargarCatalogos() {
       try {
-        const { data, error } = await supabase.from('ConsiderandosCatalogo').select('*, CategoriaConsiderando(nombre)').eq('activo', true);
-        if (error) console.error("Error de Supabase:", error);
-        else if (data) setConsiderandosBD(data);
+        const { data } = await supabase.from('ConsiderandosCatalogo').select('*, CategoriaConsiderando(nombre)').eq('activo', true);
+        if (data) setConsiderandosBD(data);
       } catch (err) {
-        console.error("Error inesperado:", err);
+        console.error(err);
       } finally {
         setCargandoConsiderandos(false);
       }
     }
-    cargarConsiderandos();
+    cargarCatalogos();
   }, []);
+
+  // EFECTO 2: Si viene un ID en la URL, se precargan todos los datos automáticamente
+  useEffect(() => {
+    async function precargarDatos() {
+      if (!idEdicion) return;
+      try {
+        const { data, error } = await supabase
+          .from("Resoluciones")
+          .select("*")
+          .eq("id", idEdicion)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          const veredictoMapper: Record<string, any> = {
+            aprobado: "Aprobado",
+            negado: "Negado",
+            diferido: "Diferido",
+            elevado: "Elevado",
+            pendiente: "Diferido"
+          };
+
+          setFormulario({
+            tipoResolucion: data.tipo_resolucion?.toUpperCase() || "ORDINARIA",
+            ano: data.anio?.toString() || new Date().getFullYear().toString(),
+            correlativo: data.correlativo?.toString() || "",
+            acta: data.acta_numero?.toString() || "",
+            punto: data.punto_numero?.toString() || "",
+            fechaComision: data.fecha_comision || "",
+            // ¡AHORA SÍ CARGAMOS LOS DATOS COMPLETOS DE LA BD!
+            nacionalidad: data.nacionalidad_solicitante || "V",
+            cedula: data.cedula_solicitante || "",
+            nombre: data.autoridad_solicitante || "",
+            programa: data.programa_academico || "",
+            sede: data.sede || "",
+            planteamiento: data.tipo_solicitud || "",
+            unidadEjecutora: data.unidad_ejecutora || ""
+          });
+
+          setVeredicto(veredictoMapper[data.veredicto] || "");
+          setTextoResolucion(data.texto_unico || "");
+
+          // ¡CARGAMOS LOS CONSIDERANDOS GUARDADOS DEL PASO 2!
+          if (data.considerandos_guardados && Array.isArray(data.considerandos_guardados)) {
+            setConsiderandosSeleccionados(data.considerandos_guardados);
+          }
+        }
+      } catch (err) {
+        console.error("Error precargando datos de edición:", err);
+      }
+    }
+    precargarDatos();
+  }, [idEdicion]);
 
   const manejarCambio = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormulario((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -98,30 +156,18 @@ export function ResolucionesProvider({ children }: { children: React.ReactNode }
   const validarYContinuar = () => {
     let nuevosErrores: Record<string, string> = {};
     if (!formulario.ano.trim()) nuevosErrores.ano = "Año requerido";
-    else if (!/^\d{4}$/.test(formulario.ano)) nuevosErrores.ano = "Año inválido";
     if (!formulario.correlativo.trim()) nuevosErrores.correlativo = "Requerido";
-    else if (!/^\d+$/.test(formulario.correlativo)) nuevosErrores.correlativo = "Solo números";
     if (!formulario.acta.trim()) nuevosErrores.acta = "Requerido";
-    else if (!/^\d+$/.test(formulario.acta)) nuevosErrores.acta = "Solo números";
     if (!formulario.punto.trim()) nuevosErrores.punto = "Requerido";
-    else if (!/^\d+$/.test(formulario.punto)) nuevosErrores.punto = "Solo números";
-    if (!formulario.cedula.trim()) nuevosErrores.cedula = "Requerido";
-    else if (!/^\d{7,9}$/.test(formulario.cedula)) nuevosErrores.cedula = "Solo números";
-    if (!formulario.nombre.trim()) nuevosErrores.nombre = "Requerido";
-    else if (formulario.nombre.trim().length < 5) nuevosErrores.nombre = "Ingrese el nombre completo";
-
-    if (!formulario.programa) nuevosErrores.programa = "Seleccione un programa";
-    if (!formulario.sede) nuevosErrores.sede = "Seleccione una sede";
-
-    if (!formulario.fechaComision) nuevosErrores.fechaComision = "Requerido";
-    if (!formulario.planteamiento.trim()) nuevosErrores.planteamiento = "Requerido";
+    if (!formulario.nombre.trim()) nuevosErrores.nombre = "Nombre requerido";
+    if (!formulario.unidadEjecutora) nuevosErrores.unidadEjecutora = "Unidad requerida";
+    if (!formulario.fechaComision) nuevosErrores.fechaComision = "Fecha requerida";
+    if (!formulario.planteamiento.trim()) nuevosErrores.planteamiento = "Planteamiento requerido";
 
     if (Object.keys(nuevosErrores).length > 0) {
       setErrores(nuevosErrores);
       return;
     }
-
-    localStorage.setItem('presav_historial_form', JSON.stringify(formulario));
     setPaso(2);
   };
 
@@ -156,7 +202,8 @@ export function ResolucionesProvider({ children }: { children: React.ReactNode }
       nombre: "",
       programa: "",
       sede: "",
-      planteamiento: ""
+      planteamiento: "",
+      unidadEjecutora: ""
     });
     setConsiderandosSeleccionados([]);
     setVeredicto("");
@@ -167,28 +214,11 @@ export function ResolucionesProvider({ children }: { children: React.ReactNode }
   return (
     <ResolucionesContext.Provider
       value={{
-        paso,
-        setPaso,
-        considerandosBD,
-        cargandoConsiderandos,
-        considerandosSeleccionados,
-        setConsiderandosSeleccionados,
-        veredicto,
-        setVeredicto,
-        textoResolucion,
-        setTextoResolucion,
-        busqueda,
-        setBusqueda,
-        errores,
-        setErrores,
-        formulario,
-        setFormulario,
-        manejarCambio,
-        validarYContinuar,
-        toggleConsiderando,
-        quitarConsiderando,
-        actualizarTextoConsiderando,
-        limpiarFormulario,
+        paso, setPaso, considerandosBD, cargandoConsiderandos, considerandosSeleccionados,
+        setConsiderandosSeleccionados, veredicto, setVeredicto, textoResolucion, setTextoResolucion,
+        busqueda, setBusqueda, errores, setErrores, formulario, setFormulario, manejarCambio,
+        validarYContinuar, toggleConsiderando, quitarConsiderando, actualizarTextoConsiderando,
+        limpiarFormulario, idEdicion
       }}
     >
       {children}
@@ -196,11 +226,17 @@ export function ResolucionesProvider({ children }: { children: React.ReactNode }
   );
 }
 
-// Hook personalizado para acceder al contexto
+// Next.js requiere envolver el useSearchParams en un Suspense para evitar fallos de renderizado estático
+export function ResolucionesProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<div className="p-12 text-center">Cargando Módulos del Formulario...</div>}>
+      <ResolucionesProviderContent>{children}</ResolucionesProviderContent>
+    </Suspense>
+  );
+}
+
 export function useResoluciones() {
   const context = useContext(ResolucionesContext);
-  if (context === undefined) {
-    throw new Error("useResoluciones debe ser usado dentro de un ResolucionesProvider");
-  }
+  if (context === undefined) throw new Error("useResoluciones debe ser usado dentro de un ResolucionesProvider");
   return context;
 }

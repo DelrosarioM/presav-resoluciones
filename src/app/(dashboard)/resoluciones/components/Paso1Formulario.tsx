@@ -1,11 +1,11 @@
-// src/components/Paso1Formulario.tsx
 import React, { useState, useEffect } from "react";
-import { IconFileDescription, IconUser, IconHistory } from "@tabler/icons-react";
+import { IconFileDescription, IconUser, IconHistory, IconEdit } from "@tabler/icons-react";
 
 import { useResoluciones } from "../context/ResolucionesContext";
 
 export default function Paso1Formulario() {
-    const { formulario, setFormulario, errores, manejarCambio, validarYContinuar } = useResoluciones();
+    // 1. INYECTAMOS idEdicion DESDE EL CONTEXTO
+    const { formulario, setFormulario, errores, manejarCambio, validarYContinuar, idEdicion } = useResoluciones();
     const [historial, setHistorial] = useState<any>(null);
 
     useEffect(() => {
@@ -24,6 +24,15 @@ export default function Paso1Formulario() {
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 sm:p-8 md:p-10 max-w-4xl mx-auto">
+
+            {/* 2. AVISO VISUAL SI ESTAMOS EN MODO EDICIÓN */}
+            {idEdicion && (
+                <div className="mb-6 p-4 bg-blue-50 text-blue-700 rounded-xl border border-blue-200 font-bold text-sm flex items-center gap-2">
+                    <IconEdit size={20} />
+                    Estás modificando los datos de la resolución ID: {idEdicion}
+                </div>
+            )}
+
             <form className="space-y-6 sm:space-y-8" onSubmit={(e) => e.preventDefault()} autoComplete="off">
                 <section>
                     <h2 className="text-lg sm:text-xl font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4 sm:mb-6 flex items-center gap-2">
@@ -137,10 +146,34 @@ export default function Paso1Formulario() {
                             )}
                         </div>
 
-                        {/* Programa Académico */}
+                        <div className="flex flex-col gap-2 md:col-span-2">
+                            <label className="font-medium text-gray-700 text-sm sm:text-base">Unidad Ejecutora *</label>
+                            {/* 3. PROTECCIÓN || "" EN EL VALUE */}
+                            <select
+                                name="unidadEjecutora"
+                                value={formulario.unidadEjecutora || ""}
+                                onChange={manejarCambio}
+                                className={`p-3 sm:p-4 rounded-xl border focus:ring-2 focus:ring-blue-500 text-sm sm:text-lg bg-white text-gray-900 font-medium w-full text-ellipsis overflow-hidden pr-8 ${errores.unidadEjecutora ? 'border-red-500' : 'border-gray-300'}`}
+                            >
+                                <option value="" className="text-gray-400" disabled>Seleccione una unidad ejecutora...</option>
+                                <option value="SUBPROGRAMA CIENCIAS DE LA EDUCACIÓN Y HUMANIDADES">Subprograma Ciencias de la Educación y Humanidades</option>
+                                <option value="SUBPROGRAMA CIENCIAS SOCIALES Y ECONÓMICAS">Subprograma Ciencias Sociales y Económicas</option>
+                                <option value="SUBPROGRAMA CIENCIAS BÁSICAS Y APLICADAS">Subprograma Ciencias Básicas y Aplicadas</option>
+                                <option value="SUBPROGRAMA CIENCIAS DEL AGRO Y DEL MAR">Subprograma Ciencias del Agro y del Mar</option>
+                                <option value="SUBPROGRAMA CIENCIAS DE LA SALUD">Subprograma Ciencias de la Salud</option>
+                            </select>
+                            {errores.unidadEjecutora && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.unidadEjecutora}</span>}
+                            {historial?.unidadEjecutora && (
+                                <button type="button" onClick={() => setFormulario({ ...formulario, unidadEjecutora: historial.unidadEjecutora })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
+                                    <IconHistory size={12} className="shrink-0" /> <span className="truncate max-w-[200px] sm:max-w-xs">Último: <span className="font-semibold text-gray-600">{acortarTexto(historial.unidadEjecutora, 35)}</span></span>
+                                </button>
+                            )}
+                        </div>
+
                         <div className="flex flex-col gap-2 md:col-span-1">
                             <label className="font-medium text-gray-700 text-sm sm:text-base">Programa académico *</label>
-                            <select name="programa" value={formulario.programa} onChange={manejarCambio} className={`p-3 sm:p-4 rounded-xl border focus:ring-2 focus:ring-blue-500 text-sm sm:text-lg bg-white text-gray-900 font-medium w-full text-ellipsis overflow-hidden pr-8 ${errores.programa ? 'border-red-500' : 'border-gray-300'}`}>
+                            {/* PROTECCIÓN || "" EN EL VALUE */}
+                            <select name="programa" value={formulario.programa || ""} onChange={manejarCambio} className={`p-3 sm:p-4 rounded-xl border focus:ring-2 focus:ring-blue-500 text-sm sm:text-lg bg-white text-gray-900 font-medium w-full text-ellipsis overflow-hidden pr-8 ${errores.programa ? 'border-red-500' : 'border-gray-300'}`}>
                                 <option value="" className="text-gray-400">Seleccione un programa...</option>
                                 <option value="Maestría en Educación mención Docencia Universitaria">Maestría en Educación mención Docencia Universitaria</option>
                                 <option value="Maestría en Gerencia Pública">Maestría en Gerencia Pública</option>
@@ -153,9 +186,9 @@ export default function Paso1Formulario() {
                             )}
                         </div>
 
-                        {/* Sede */}
                         <div className="flex flex-col gap-2 md:col-span-1">
                             <label className="font-medium text-gray-700 text-sm sm:text-base">Sede *</label>
+                            {/* PROTECCIÓN || "" EN EL VALUE */}
                             <select name="sede" value={formulario.sede || ""} onChange={manejarCambio} className={`p-3 sm:p-4 rounded-xl border focus:ring-2 focus:ring-blue-500 text-sm sm:text-lg bg-white text-gray-900 font-medium w-full text-ellipsis overflow-hidden pr-8 ${errores?.sede ? 'border-red-500' : 'border-gray-300'}`}>
                                 <option value="" className="text-gray-400">Seleccione una sede...</option>
                                 <option value="VIPI San Carlos">VIPI San Carlos</option>
@@ -193,7 +226,7 @@ export default function Paso1Formulario() {
 
                 <div className="pt-4 sm:pt-6 flex justify-end border-t border-gray-200 mt-6 sm:mt-8">
                     <button type="button" onClick={validarYContinuar} className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 sm:py-3 px-8 rounded-xl text-base transition-colors shadow-sm flex items-center justify-center gap-2">
-                        <span>Siguiente: Seleccionar Considerandos</span>
+                        <span>{idEdicion ? "Siguiente: Revisar Considerandos" : "Siguiente: Seleccionar Considerandos"}</span>
                         <span className="text-3xl sm:text-base leading-none mb-1 sm:mb-0">→</span>
                     </button>
                 </div>
