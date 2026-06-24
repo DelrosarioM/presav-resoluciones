@@ -52,10 +52,12 @@ export default function LoginPage() {
                 );
             }
 
-            // Redirect based on role
+            // REDIRECCIÓN BASADA EN ROLES ACTUALIZADA
             if (usuarioData.rol === "estudiante") {
-                router.push("/mis-tramites");
+                // Al estudiante lo mandamos directo al historial
+                router.push("/historial");
             } else {
+                // Administradores y profesores van al dashboard principal
                 router.push("/resoluciones");
             }
         } catch (err: any) {
