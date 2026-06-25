@@ -2,17 +2,38 @@ import React, { useState, useEffect } from "react";
 import { IconFileDescription, IconUser, IconHistory, IconEdit } from "@tabler/icons-react";
 
 import { useResoluciones } from "../context/ResolucionesContext";
+// NUEVO 1: Importamos supabase para poder hacer consultas
+import { supabase } from "@/lib/supabase";
 
 export default function Paso1Formulario() {
-    // 1. INYECTAMOS idEdicion DESDE EL CONTEXTO
     const { formulario, setFormulario, errores, manejarCambio, validarYContinuar, idEdicion } = useResoluciones();
     const [historial, setHistorial] = useState<any>(null);
 
+    // NUEVO 2: Creamos el estado para almacenar las sedes de la base de datos
+    const [sedes, setSedes] = useState<any[]>([]);
+
     useEffect(() => {
+        // Carga de historial local
         const datosGuardados = localStorage.getItem('presav_historial_form');
         if (datosGuardados) {
             setHistorial(JSON.parse(datosGuardados));
         }
+
+        // NUEVO 3: Función para buscar las sedes en Supabase al cargar la pantalla
+        const cargarSedes = async () => {
+            const { data, error } = await supabase
+                .from('Sede')
+                .select('*')
+                .order('nombre', { ascending: true }); // Las ordenamos alfabéticamente
+
+            if (error) {
+                console.error("Error cargando sedes:", error);
+            } else if (data) {
+                setSedes(data);
+            }
+        };
+
+        cargarSedes();
     }, []);
 
     const hoy = new Date().toISOString().split('T')[0];
@@ -25,7 +46,6 @@ export default function Paso1Formulario() {
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 sm:p-8 md:p-10 max-w-4xl mx-auto">
 
-            {/* 2. AVISO VISUAL SI ESTAMOS EN MODO EDICIÓN */}
             {idEdicion && (
                 <div className="mb-6 p-4 bg-blue-50 text-blue-700 rounded-xl border border-blue-200 font-bold text-sm flex items-center gap-2">
                     <IconEdit size={20} />
@@ -63,8 +83,8 @@ export default function Paso1Formulario() {
                             </div>
                             {(errores.correlativo || errores.ano) && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.ano ? errores.ano : errores.correlativo}</span>}
                             {historial?.correlativo && (
-                                <button type="button" onClick={() => setFormulario({ ...formulario, correlativo: historial.correlativo, ano: historial.ano || new Date().getFullYear().toString() })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
-                                    <IconHistory size={12} /> Última: <span className="font-semibold text-gray-600">{historial.ano || new Date().getFullYear()}/{historial.correlativo}</span>
+                                <button type="button" onClick={() => setFormulario({ ...formulario, correlativo: historial.correlativo, ano: historial.ano || new Date().getFullYear().toString() })} className="text-xs sm:text-sm text-gray-500 hover:text-blue-600 cursor-pointer hover:underline mt-1 flex items-center gap-1 transition-all text-left w-max">
+                                    <IconHistory size={14} /> Última: <span className="font-semibold text-gray-600">{historial.ano || new Date().getFullYear()}/{historial.correlativo}</span>
                                 </button>
                             )}
                         </div>
@@ -76,8 +96,8 @@ export default function Paso1Formulario() {
                                     <input type="text" name="acta" value={formulario.acta} onChange={manejarCambio} placeholder="Acta (Ej. 113)" className={`p-3 sm:p-4 rounded-xl border focus:ring-2 focus:ring-blue-500 text-sm sm:text-lg text-gray-900 font-medium placeholder-gray-400 focus:outline-none min-w-0 ${errores.acta ? 'border-red-500' : 'border-gray-300'}`} />
                                     {errores.acta && <span className="text-red-500 text-xs sm:text-sm font-bold mt-1">{errores.acta}</span>}
                                     {historial?.acta && (
-                                        <button type="button" onClick={() => setFormulario({ ...formulario, acta: historial.acta })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
-                                            <IconHistory size={12} /> Última: <span className="font-semibold text-gray-600">{historial.acta}</span>
+                                        <button type="button" onClick={() => setFormulario({ ...formulario, acta: historial.acta })} className="text-xs sm:text-sm text-gray-500 hover:text-blue-600 cursor-pointer hover:underline mt-1 flex items-center gap-1 transition-all text-left w-max">
+                                            <IconHistory size={14} /> Última: <span className="font-semibold text-gray-600">{historial.acta}</span>
                                         </button>
                                     )}
                                 </div>
@@ -85,8 +105,8 @@ export default function Paso1Formulario() {
                                     <input type="text" name="punto" value={formulario.punto} onChange={manejarCambio} placeholder="Punto (Ej. 50)" className={`p-3 sm:p-4 rounded-xl border focus:ring-2 focus:ring-blue-500 text-sm sm:text-lg text-gray-900 font-medium placeholder-gray-400 focus:outline-none min-w-0 ${errores.punto ? 'border-red-500' : 'border-gray-300'}`} />
                                     {errores.punto && <span className="text-red-500 text-xs sm:text-sm font-bold mt-1">{errores.punto}</span>}
                                     {historial?.punto && (
-                                        <button type="button" onClick={() => setFormulario({ ...formulario, punto: historial.punto })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
-                                            <IconHistory size={12} /> Último: <span className="font-semibold text-gray-600">{historial.punto}</span>
+                                        <button type="button" onClick={() => setFormulario({ ...formulario, punto: historial.punto })} className="text-xs sm:text-sm text-gray-500 hover:text-blue-600 cursor-pointer hover:underline mt-1 flex items-center gap-1 transition-all text-left w-max">
+                                            <IconHistory size={14} /> Último: <span className="font-semibold text-gray-600">{historial.punto}</span>
                                         </button>
                                     )}
                                 </div>
@@ -105,8 +125,8 @@ export default function Paso1Formulario() {
                             />
                             {errores.fechaComision && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.fechaComision}</span>}
                             {historial?.fechaComision && (
-                                <button type="button" onClick={() => setFormulario({ ...formulario, fechaComision: historial.fechaComision })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
-                                    <IconHistory size={12} /> Última: <span className="font-semibold text-gray-600">{historial.fechaComision}</span>
+                                <button type="button" onClick={() => setFormulario({ ...formulario, fechaComision: historial.fechaComision })} className="text-xs sm:text-sm text-gray-500 hover:text-blue-600 cursor-pointer hover:underline mt-1 flex items-center gap-1 transition-all text-left w-max">
+                                    <IconHistory size={14} /> Última utilizada: <span className="font-semibold text-gray-600">{historial.fechaComision}</span>
                                 </button>
                             )}
                         </div>
@@ -129,8 +149,8 @@ export default function Paso1Formulario() {
                             </div>
                             {errores.cedula && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.cedula}</span>}
                             {historial?.cedula && (
-                                <button type="button" onClick={() => setFormulario({ ...formulario, cedula: historial.cedula, nacionalidad: historial.nacionalidad || 'V' })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
-                                    <IconHistory size={12} /> Última: <span className="font-semibold text-gray-600">{historial.nacionalidad || 'V'}-{historial.cedula}</span>
+                                <button type="button" onClick={() => setFormulario({ ...formulario, cedula: historial.cedula, nacionalidad: historial.nacionalidad || 'V' })} className="text-xs sm:text-sm text-gray-500 hover:text-blue-600 cursor-pointer hover:underline mt-1 flex items-center gap-1 transition-all text-left w-max">
+                                    <IconHistory size={14} /> Última: <span className="font-semibold text-gray-600">{historial.nacionalidad || 'V'}-{historial.cedula}</span>
                                 </button>
                             )}
                         </div>
@@ -140,15 +160,14 @@ export default function Paso1Formulario() {
                             <input type="text" name="nombre" value={formulario.nombre} onChange={manejarCambio} placeholder="Ej. Yailmar Galindez" className={`p-3 sm:p-4 rounded-xl border focus:ring-2 focus:ring-blue-500 text-sm sm:text-lg text-gray-900 font-medium placeholder-gray-400 min-w-0 ${errores.nombre ? 'border-red-500' : 'border-gray-300'}`} />
                             {errores.nombre && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.nombre}</span>}
                             {historial?.nombre && (
-                                <button type="button" onClick={() => setFormulario({ ...formulario, nombre: historial.nombre })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
-                                    <IconHistory size={12} className="shrink-0" /> <span className="truncate max-w-[200px] sm:max-w-xs">Último: <span className="font-semibold text-gray-600">{acortarTexto(historial.nombre, 25)}</span></span>
+                                <button type="button" onClick={() => setFormulario({ ...formulario, nombre: historial.nombre })} className="text-xs sm:text-sm text-gray-500 hover:text-blue-600 cursor-pointer hover:underline mt-1 flex items-center gap-1 transition-all text-left w-max">
+                                    <IconHistory size={14} className="shrink-0" /> <span className="truncate max-w-[200px] sm:max-w-xs">Último: <span className="font-semibold text-gray-600">{acortarTexto(historial.nombre, 25)}</span></span>
                                 </button>
                             )}
                         </div>
 
                         <div className="flex flex-col gap-2 md:col-span-2">
                             <label className="font-medium text-gray-700 text-sm sm:text-base">Unidad Ejecutora *</label>
-                            {/* 3. PROTECCIÓN || "" EN EL VALUE */}
                             <select
                                 name="unidadEjecutora"
                                 value={formulario.unidadEjecutora || ""}
@@ -164,15 +183,14 @@ export default function Paso1Formulario() {
                             </select>
                             {errores.unidadEjecutora && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.unidadEjecutora}</span>}
                             {historial?.unidadEjecutora && (
-                                <button type="button" onClick={() => setFormulario({ ...formulario, unidadEjecutora: historial.unidadEjecutora })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
-                                    <IconHistory size={12} className="shrink-0" /> <span className="truncate max-w-[200px] sm:max-w-xs">Último: <span className="font-semibold text-gray-600">{acortarTexto(historial.unidadEjecutora, 35)}</span></span>
+                                <button type="button" onClick={() => setFormulario({ ...formulario, unidadEjecutora: historial.unidadEjecutora })} className="text-xs sm:text-sm text-gray-500 hover:text-blue-600 cursor-pointer hover:underline mt-1 flex items-center gap-1 transition-all text-left w-max">
+                                    <IconHistory size={14} className="shrink-0" /> <span className="truncate max-w-[200px] sm:max-w-xs">Último: <span className="font-semibold text-gray-600">{acortarTexto(historial.unidadEjecutora, 35)}</span></span>
                                 </button>
                             )}
                         </div>
 
                         <div className="flex flex-col gap-2 md:col-span-1">
                             <label className="font-medium text-gray-700 text-sm sm:text-base">Programa académico *</label>
-                            {/* PROTECCIÓN || "" EN EL VALUE */}
                             <select name="programa" value={formulario.programa || ""} onChange={manejarCambio} className={`p-3 sm:p-4 rounded-xl border focus:ring-2 focus:ring-blue-500 text-sm sm:text-lg bg-white text-gray-900 font-medium w-full text-ellipsis overflow-hidden pr-8 ${errores.programa ? 'border-red-500' : 'border-gray-300'}`}>
                                 <option value="" className="text-gray-400">Seleccione un programa...</option>
                                 <option value="Maestría en Educación mención Docencia Universitaria">Maestría en Educación mención Docencia Universitaria</option>
@@ -180,26 +198,27 @@ export default function Paso1Formulario() {
                             </select>
                             {errores.programa && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.programa}</span>}
                             {historial?.programa && (
-                                <button type="button" onClick={() => setFormulario({ ...formulario, programa: historial.programa })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
-                                    <IconHistory size={12} className="shrink-0" /> <span className="truncate max-w-[200px] sm:max-w-xs">Último: <span className="font-semibold text-gray-600">{acortarTexto(historial.programa, 25)}</span></span>
+                                <button type="button" onClick={() => setFormulario({ ...formulario, programa: historial.programa })} className="text-xs sm:text-sm text-gray-500 hover:text-blue-600 cursor-pointer hover:underline mt-1 flex items-center gap-1 transition-all text-left w-max">
+                                    <IconHistory size={14} className="shrink-0" /> <span className="truncate max-w-[200px] sm:max-w-xs">Último: <span className="font-semibold text-gray-600">{acortarTexto(historial.programa, 25)}</span></span>
                                 </button>
                             )}
                         </div>
 
                         <div className="flex flex-col gap-2 md:col-span-1">
                             <label className="font-medium text-gray-700 text-sm sm:text-base">Sede *</label>
-                            {/* PROTECCIÓN || "" EN EL VALUE */}
+                            {/* NUEVO 4: Ahora el select mapea dinámicamente el estado "sedes" */}
                             <select name="sede" value={formulario.sede || ""} onChange={manejarCambio} className={`p-3 sm:p-4 rounded-xl border focus:ring-2 focus:ring-blue-500 text-sm sm:text-lg bg-white text-gray-900 font-medium w-full text-ellipsis overflow-hidden pr-8 ${errores?.sede ? 'border-red-500' : 'border-gray-300'}`}>
                                 <option value="" className="text-gray-400">Seleccione una sede...</option>
-                                <option value="VIPI San Carlos">VIPI San Carlos</option>
-                                <option value="VPDS Barinas">VPDS Barinas</option>
-                                <option value="VPA Guanare">VPA Guanare</option>
-                                <option value="VPRR San Fernando">VPRR San Fernando</option>
+                                {sedes.map((sedeItem) => (
+                                    <option key={sedeItem.id} value={sedeItem.nombre}>
+                                        {sedeItem.nombre}
+                                    </option>
+                                ))}
                             </select>
                             {errores?.sede && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.sede}</span>}
                             {historial?.sede && (
-                                <button type="button" onClick={() => setFormulario({ ...formulario, sede: historial.sede })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
-                                    <IconHistory size={12} /> Última: <span className="font-semibold text-gray-600">{historial.sede}</span>
+                                <button type="button" onClick={() => setFormulario({ ...formulario, sede: historial.sede })} className="text-xs sm:text-sm text-gray-500 hover:text-blue-600 cursor-pointer hover:underline mt-1 flex items-center gap-1 transition-all text-left w-max">
+                                    <IconHistory size={14} /> Última: <span className="font-semibold text-gray-600">{historial.sede}</span>
                                 </button>
                             )}
                         </div>
@@ -216,8 +235,8 @@ export default function Paso1Formulario() {
                             />
                             {errores.planteamiento && <span className="text-red-500 text-xs sm:text-sm font-bold">{errores.planteamiento}</span>}
                             {historial?.planteamiento && (
-                                <button type="button" onClick={() => setFormulario({ ...formulario, planteamiento: historial.planteamiento })} className="text-[10px] sm:text-[11px] text-gray-400 hover:text-blue-600 mt-1 flex items-center gap-1 transition-colors text-left w-max">
-                                    <IconHistory size={12} className="shrink-0" /> <span className="truncate w-full max-w-[200px] sm:max-w-md">Último: <span className="font-semibold text-gray-600">{acortarTexto(historial.planteamiento, 50)}</span></span>
+                                <button type="button" onClick={() => setFormulario({ ...formulario, planteamiento: historial.planteamiento })} className="text-xs sm:text-sm text-gray-500 hover:text-blue-600 cursor-pointer hover:underline mt-1 flex items-center gap-1 transition-all text-left w-max">
+                                    <IconHistory size={14} className="shrink-0" /> <span className="truncate w-full max-w-[200px] sm:max-w-md">Último: <span className="font-semibold text-gray-600">{acortarTexto(historial.planteamiento, 50)}</span></span>
                                 </button>
                             )}
                         </div>

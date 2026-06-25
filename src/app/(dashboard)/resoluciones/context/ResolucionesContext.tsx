@@ -159,8 +159,11 @@ function ResolucionesProviderContent({ children }: { children: React.ReactNode }
     if (!formulario.correlativo.trim()) nuevosErrores.correlativo = "Requerido";
     if (!formulario.acta.trim()) nuevosErrores.acta = "Requerido";
     if (!formulario.punto.trim()) nuevosErrores.punto = "Requerido";
+    if (!formulario.cedula.trim()) nuevosErrores.cedula = "Cédula requerida"; // <-- AÑADIDO: validación de cédula que faltaba
     if (!formulario.nombre.trim()) nuevosErrores.nombre = "Nombre requerido";
     if (!formulario.unidadEjecutora) nuevosErrores.unidadEjecutora = "Unidad requerida";
+    if (!formulario.programa) nuevosErrores.programa = "Programa académico requerido"; // <-- RESTAURADO
+    if (!formulario.sede) nuevosErrores.sede = "Sede requerida"; // <-- RESTAURADO
     if (!formulario.fechaComision) nuevosErrores.fechaComision = "Fecha requerida";
     if (!formulario.planteamiento.trim()) nuevosErrores.planteamiento = "Planteamiento requerido";
 
@@ -168,6 +171,10 @@ function ResolucionesProviderContent({ children }: { children: React.ReactNode }
       setErrores(nuevosErrores);
       return;
     }
+
+    // SOLUCIÓN: Volvemos a guardar en el LocalStorage todo el formulario antes de avanzar
+    localStorage.setItem('presav_historial_form', JSON.stringify(formulario));
+
     setPaso(2);
   };
 

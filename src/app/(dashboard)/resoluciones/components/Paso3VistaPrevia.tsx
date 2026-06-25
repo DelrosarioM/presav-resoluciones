@@ -1,5 +1,5 @@
 import React from "react";
-import { IconCheck, IconX, IconArrowLeft, IconFileWord, IconBrandFacebook, IconBrandTwitter, IconBrandInstagram, IconClock, IconArrowUp } from "@tabler/icons-react";
+import { IconCheck, IconX, IconArrowLeft, IconFileWord, IconBrandFacebook, IconBrandTwitter, IconBrandInstagram, IconClock, IconArrowUp, IconDeviceFloppy } from "@tabler/icons-react";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { saveAs } from "file-saver";
@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { useResoluciones } from "../context/ResolucionesContext";
 
 export default function Paso3VistaPrevia() {
-    const { setPaso, veredicto, setVeredicto, textoResolucion, setTextoResolucion, formulario, considerandosSeleccionados, idEdicion } = useResoluciones();
+    const { setPaso, veredicto, setVeredicto, textoResolucion, setTextoResolucion, formulario, setFormulario, considerandosSeleccionados, setConsiderandosSeleccionados, idEdicion } = useResoluciones();
 
     const formatearFecha = (fechaISO: string) => {
         if (!fechaISO) return "[FECHA]";
@@ -18,10 +18,10 @@ export default function Paso3VistaPrevia() {
 
     const unidadEjecutoraDinamica = formulario.unidadEjecutora || "SUBPROGRAMA CIENCIAS DE LA EDUCACIÓN Y HUMANIDADES";
 
-    const generarWord = async () => {
+    const guardarEnBaseDeDatos = async () => {
         if (!veredicto) {
-            alert("Por favor, seleccione un veredicto antes de generar el documento.");
-            return;
+            alert("Por favor, seleccione un veredicto antes de continuar.");
+            return false;
         }
 
         try {
@@ -44,7 +44,6 @@ export default function Paso3VistaPrevia() {
             };
             const veredictoFormateado = veredictoMapper[veredicto] || "diferido";
 
-            // OBJETO DE DATOS UNIFICADO CON LOS NUEVOS CAMPOS
             const payloadResolucion = {
                 tipo_resolucion: tipoResolucionFormateado,
                 anio: parseInt(formulario.ano),
@@ -58,8 +57,6 @@ export default function Paso3VistaPrevia() {
                 texto_unico: textoResolucion,
                 profesor_autor_id: creadoPorId,
                 unidad_ejecutora: formulario.unidadEjecutora,
-
-                // --- ¡AQUÍ ESTÁN LOS CAMPOS NUEVOS QUE FALTABAN! ---
                 nacionalidad_solicitante: formulario.nacionalidad,
                 cedula_solicitante: formulario.cedula,
                 programa_academico: formulario.programa,
@@ -67,27 +64,50 @@ export default function Paso3VistaPrevia() {
                 considerandos_guardados: considerandosSeleccionados
             };
 
-            // LÓGICA DE DECISIÓN DINÁMICA: ¿Es edición o creación nueva?
             if (idEdicion) {
-                // EDICIÓN PROTÉGIDA
-                const { error: updateError } = await supabase
-                    .from('Resoluciones')
-                    .update(payloadResolucion)
-                    .eq('id', idEdicion);
-
+                const { error: updateError } = await supabase.from('Resoluciones').update(payloadResolucion).eq('id', idEdicion);
                 if (updateError) throw updateError;
-                console.log("Resolución existente actualizada con éxito en la base de datos.");
             } else {
-                // CREACIÓN TRADICIONAL
-                const { error: insertError } = await supabase
-                    .from('Resoluciones')
-                    .insert(payloadResolucion);
-
+                const { error: insertError } = await supabase.from('Resoluciones').insert(payloadResolucion);
                 if (insertError) throw insertError;
-                console.log("Nueva resolución registrada con éxito en la base de datos.");
             }
 
-            // Generación del Archivo Word
+            return true;
+        } catch (error: any) {
+            console.error("Error guardando en BD:", error);
+            if (error.code === '23505') {
+                alert(`¡ALTO!\n\nYa existe una resolución ${formulario.tipoResolucion} registrada con el número ${formulario.correlativo} para el año ${formulario.ano}.\n\nPor favor, regrese al Paso 1 y asigne un número correlativo diferente.`);
+            } else {
+                alert("Ocurrió un error al guardar la resolución en la base de datos.");
+            }
+            return false;
+        }
+    };
+
+    const soloGuardar = async () => {
+        const exito = await guardarEnBaseDeDatos();
+        if (exito) {
+            alert(idEdicion ? "✅ Edición guardada exitosamente." : "✅ Resolución registrada exitosamente.");
+
+            if (idEdicion) {
+                setPaso(1);
+            } else {
+                setFormulario({
+                    tipoResolucion: "ORDINARIA", ano: new Date().getFullYear().toString(), correlativo: "", acta: "", punto: "", fechaComision: "", nacionalidad: "V", cedula: "", nombre: "", programa: "", sede: "", planteamiento: "", unidadEjecutora: ""
+                });
+                setConsiderandosSeleccionados([]);
+                setVeredicto("");
+                setTextoResolucion("");
+                setPaso(1);
+            }
+        }
+    };
+
+    const generarWord = async () => {
+        const exito = await guardarEnBaseDeDatos();
+        if (!exito) return;
+
+        try {
             const response = await fetch('/plantilla_resolucion.docx');
             if (!response.ok) throw new Error("No se pudo cargar la plantilla base.");
             const arrayBuffer = await response.arrayBuffer();
@@ -123,7 +143,7 @@ export default function Paso3VistaPrevia() {
 
         } catch (error) {
             console.error("Error procesando el documento:", error);
-            alert("Ocurrió un error al guardar o descargar el documento.");
+            alert("Los datos se guardaron en la base de datos, pero ocurrió un error al generar el archivo Word.");
         }
     };
 
@@ -155,7 +175,7 @@ export default function Paso3VistaPrevia() {
     return (
         <div className="flex flex-col gap-6">
             <div className="flex justify-start max-w-4xl mx-auto w-full px-2 sm:px-0">
-                <button onClick={() => setPaso(2)} className="text-blue-600 font-semibold hover:text-blue-800 transition-colors flex items-center gap-2">
+                <button onClick={() => setPaso(2)} className="cursor-pointer text-blue-600 font-semibold hover:text-blue-800 transition-colors flex items-center gap-2">
                     <IconArrowLeft size={20} /> Volver a editar Considerandos
                 </button>
             </div>
@@ -165,27 +185,28 @@ export default function Paso3VistaPrevia() {
                 <div className="mb-6">
                     <label className="block font-medium text-gray-700 mb-3 text-sm">Veredicto Final:</label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                        {/* SE AGREGÓ cursor-pointer A LOS 4 BOTONES */}
                         <button
                             onClick={() => setVeredicto("Aprobado")}
-                            className={`py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Aprobado" ? 'bg-green-50 border-green-500 text-green-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
+                            className={`cursor-pointer py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Aprobado" ? 'bg-green-50 border-green-500 text-green-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
                         >
                             <IconCheck size={20} /> APROBAR
                         </button>
                         <button
                             onClick={() => setVeredicto("Negado")}
-                            className={`py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Negado" ? 'bg-red-50 border-red-500 text-red-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
+                            className={`cursor-pointer py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Negado" ? 'bg-red-50 border-red-500 text-red-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
                         >
                             <IconX size={20} /> NEGAR
                         </button>
                         <button
                             onClick={() => setVeredicto("Diferido")}
-                            className={`py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Diferido" ? 'bg-orange-50 border-orange-500 text-orange-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
+                            className={`cursor-pointer py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Diferido" ? 'bg-orange-50 border-orange-500 text-orange-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
                         >
                             <IconClock size={20} /> DIFERIR
                         </button>
                         <button
                             onClick={() => setVeredicto("Elevado")}
-                            className={`py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Elevado" ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
+                            className={`cursor-pointer py-3 rounded-xl font-bold text-sm border transition-all flex justify-center items-center gap-2 ${veredicto === "Elevado" ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
                         >
                             <IconArrowUp size={20} /> ELEVAR
                         </button>
@@ -275,15 +296,24 @@ export default function Paso3VistaPrevia() {
             </div>
 
             <div className="flex flex-col-reverse sm:flex-row justify-between items-center mt-4 max-w-4xl mx-auto w-full gap-4 px-2 sm:px-0">
-                <button onClick={() => setPaso(2)} className="w-full sm:w-auto justify-center text-blue-600 font-semibold hover:text-blue-800 transition-colors flex items-center gap-2 py-2">
+                {/* SE AGREGÓ cursor-pointer A LOS 3 BOTONES FINALES */}
+                <button onClick={() => setPaso(2)} className="cursor-pointer w-full sm:w-auto justify-center text-blue-600 font-semibold hover:text-blue-800 transition-colors flex items-center gap-2 py-2">
                     <IconArrowLeft size={20} /> Volver a Considerandos
                 </button>
-                <button
-                    onClick={generarWord}
-                    className="w-full sm:w-auto justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl text-base shadow-sm flex items-center gap-2 transition-transform active:scale-95"
-                >
-                    <IconFileWord size={20} /> {idEdicion ? "Guardar Edición y Descargar" : "Generar Resolución (Word)"}
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto justify-end">
+                    <button
+                        onClick={soloGuardar}
+                        className="cursor-pointer w-full sm:w-auto justify-center bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl text-base shadow-sm flex items-center gap-2 transition-transform active:scale-95"
+                    >
+                        <IconDeviceFloppy size={20} /> Guardar Resolución
+                    </button>
+                    <button
+                        onClick={generarWord}
+                        className="cursor-pointer w-full sm:w-auto justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl text-base shadow-sm flex items-center gap-2 transition-transform active:scale-95"
+                    >
+                        <IconFileWord size={20} /> {idEdicion ? "Guardar y Descargar" : "Generar (Word)"}
+                    </button>
+                </div>
             </div>
         </div>
     );
